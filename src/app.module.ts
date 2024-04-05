@@ -3,7 +3,11 @@ import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { UsersModule } from './users/users.module';
+import { CommonModule } from './common/common.module';
 import * as Joi from 'joi';
+import { User } from './users/entities/user.entity';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -29,12 +33,16 @@ import * as Joi from 'joi';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // 'prod' 환경이 아닐 경우, 데이터베이스 스키마 자동 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // 'prod'와 'test' 환경이 아닐 경우, 로깅 활성화
-      entities: [], // TypeORM이 사용할 엔티티 모델 배
+      entities: [User], // TypeORM이 사용할 엔티티 모델 배
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver, // 사용할 GraphQL 서버 드라이버를 ApolloDriver로 설정한다.
       autoSchemaFile: true, // 스키마 파일을 자동으로 생성하도록 설정한다.
     }),
+    ScheduleModule.forRoot(),
+    
+    UsersModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],
