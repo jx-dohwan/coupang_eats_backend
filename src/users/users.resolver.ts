@@ -8,43 +8,60 @@ import { AuthUser } from "src/auth/auth-user.decorator";
 import { UserProfileInput, UserProfileOutput } from "./dtos/user-profile.dto";
 import { EditProfileInput, EditProfileOutput } from "./dtos/edit-profile.dto";
 
-@Resolver(of => User) // GraphQL 리졸버, 해당 리졸버가 user 엔티티와 관련된 기능을 처리함을 명시
-export class UsersResolver {
-    constructor(private readonly usersService: UsersService) { } // 생성자를 통해 의존성 주입, resolver 내에서 사용됨
 
-    @Mutation(returns => CreateAccountOutput) // GraphQL의 뮤테이션을 정의, CreateAccountOutput은 이 뮤테이션의 반환 타입
-    async createAccount(
-        @Args('input') createAccountInput: CreateAccountInput, // CreateAccountINput 타입의 객체를 input으로 인자를 받는다.
-    ): Promise<CreateAccountOutput> { // 비동기 함수로, Promise를 반환
+// User 엔티티에 대한 리졸버를 정의합니다. 이 리졸버는 User 엔티티와 관련된 데이터를 처리합니다.
+@Resolver(of => User)
+export class UsersResolver {
+    // UsersService를 이 리졸버의 생성자를 통해 의존성 주입합니다.
+    // 이 서비스는 이 리졸버 내에서 사용자와 관련된 비즈니스 로직을 처리하는 데 사용됩니다.
+    constructor(private readonly usersService: UsersService) { }
+
+    // 사용자 계정 생성을 위한 뮤테이션을 정의합니다.
+    // CreateAccountInput 타입의 인자를 받아, CreateAccountOutput 타입의 결과를 반환합니다.
+    @Mutation(returns => CreateAccountOutput)
+    async createAccount(@Args('input') createAccountInput: CreateAccountInput): Promise<CreateAccountOutput> {
+        // UsersService의 createAccount 메서드를 호출하여 계정 생성 로직을 처리합니다.
         return this.usersService.createAccount(createAccountInput);
     }
 
+    // 사용자 로그인을 위한 뮤테이션을 정의합니다.
+    // LoginInput 타입의 인자를 받아, LoginOutput 타입의 결과를 반환합니다.
     @Mutation(returns => LoginOutput)
     async login(@Args('input') loginInput: LoginInput): Promise<LoginOutput> {
-        return this.usersService.login(loginInput)
+        // UsersService의 login 메서드를 호출하여 로그인 로직을 처리합니다.
+        return this.usersService.login(loginInput);
     }
 
+    // 현재 인증된 사용자의 정보를 조회하는 쿼리를 정의합니다.
+    // @Role 데코레이터를 사용하여 이 쿼리에 접근할 수 있는 역할을 지정합니다.
+    // 여기서는 'Any'를 지정하여 모든 역할의 사용자가 접근할 수 있도록 합니다.
     @Query(returns => User)
     @Role(['Any'])
     me(@AuthUser() authUser: User) {
+        // @AuthUser 데코레이터를 사용하여 현재 인증된 사용자의 정보를 받아옵니다.
+        // 이 정보는 바로 반환됩니다.
         return authUser;
     }
 
+    // 특정 사용자의 프로필을 조회하는 쿼리를 정의합니다.
+    // UserProfileInput 타입의 인자를 받아, UserProfileOutput 타입의 결과를 반환합니다.
     @Query(returns => UserProfileOutput)
     @Role(['Any'])
-    async userProfile(
-        @Args() userProfileInput: UserProfileInput,
-    ): Promise<UserProfileOutput> {
-        return this.usersService.findById(userProfileInput.userId)
+    async userProfile(@Args() userProfileInput: UserProfileInput): Promise<UserProfileOutput> {
+        // UsersService의 findById 메서드를 호출하여 사용자 프로필 조회 로직을 처리합니다.
+        return this.usersService.findById(userProfileInput.userId);
     }
 
+    // 사용자 프로필을 편집하는 뮤테이션을 정의합니다.
+    // EditProfileInput 타입의 인자를 받아, EditProfileOutput 타입의 결과를 반환합니다.
     @Mutation(returns => EditProfileOutput)
     @Role(['Any'])
     async editProfile(
-        @AuthUser() authUser: User,
-        @Args('input') editProfileInput: EditProfileInput
+        @AuthUser() authUser: User, // 현재 인증된 사용자의 정보를 @AuthUser 데코레이터를 통해 받아옵니다.
+        @Args('input') editProfileInput: EditProfileInput // 편집할 프로필 정보를 인자로 받습니다.
     ): Promise<EditProfileOutput> {
+        // UsersService의 editProfile 메서드를 호출하여 프로필 편집 로직을 처리합니다.
+        // 현재 인증된 사용자의 ID와 편집할 프로필 정보를 인자로 전달합니다.
         return this.usersService.editProfile(authUser.id, editProfileInput);
     }
-
 }

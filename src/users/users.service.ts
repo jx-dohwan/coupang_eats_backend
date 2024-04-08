@@ -17,7 +17,7 @@ export class UsersService {
         private readonly jwtService: JwtService
     ) { }
 
-    async createAccount({ // 사용자 계정을 생성하는 비즈니스 로직 구
+    async createAccount({ // 사용자 계정을 생성하는 비즈니스 로직 구현
         email,
         password,
         role
