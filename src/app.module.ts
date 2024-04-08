@@ -8,6 +8,7 @@ import { CommonModule } from './common/common.module';
 import * as Joi from 'joi';
 import { User } from './users/entities/user.entity';
 import { ScheduleModule } from '@nestjs/schedule';
+import { JwtModule } from './jwt/jwt.module';
 
 @Module({
   imports: [
@@ -42,7 +43,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     ScheduleModule.forRoot(),
     
     UsersModule,
-    CommonModule,
+    JwtModule.forRoot({
+      privateKey: process.env.PRIVATE_KEY,
+    }),
   ],
   controllers: [],
   providers: [],
