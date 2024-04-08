@@ -7,6 +7,7 @@ import { Role } from "src/auth/role.decorator";
 import { AuthUser } from "src/auth/auth-user.decorator";
 import { UserProfileInput, UserProfileOutput } from "./dtos/user-profile.dto";
 import { EditProfileInput, EditProfileOutput } from "./dtos/edit-profile.dto";
+import { VerifyEmailInput, VerifyEmailOutput } from "./dtos/verify-email.dto";
 
 
 // User 엔티티에 대한 리졸버를 정의합니다. 이 리졸버는 User 엔티티와 관련된 데이터를 처리합니다.
@@ -63,5 +64,18 @@ export class UsersResolver {
         // UsersService의 editProfile 메서드를 호출하여 프로필 편집 로직을 처리합니다.
         // 현재 인증된 사용자의 ID와 편집할 프로필 정보를 인자로 전달합니다.
         return this.usersService.editProfile(authUser.id, editProfileInput);
+    }
+
+    // @Mutation 데코레이터는 GraphQL 뮤테이션을 정의합니다.
+    // 이 뮤테이션은 클라이언트가 서버에 데이터 변경(이 경우, 이메일 인증)을 요청할 때 사용됩니다.
+    @Mutation(returns => VerifyEmailOutput)
+    verifyEmail(
+        // @Args 데코레이터를 사용하여 GraphQL 쿼리에서 'input'이라는 이름의 인자를 받습니다.
+        // 이 인자의 타입은 VerifyEmailInput입니다. 구조 분해 할당을 사용하여 입력 객체에서 code를 직접 추출합니다.
+        @Args('input') { code }: VerifyEmailInput,
+    ): Promise<VerifyEmailOutput> { // 비동기 함수이므로 Promise를 반환합니다. VerifyEmailOutput 타입을 반환하는 Promise입니다.
+        // usersService의 verifyEmail 메서드를 호출하고, 입력받은 code를 인자로 전달합니다.
+        // 이 메서드는 비동기로 처리되며, 최종적으로 VerifyEmailOutput 타입의 결과를 반환하는 Promise를 반환합니다.
+        return this.usersService.verifyEmail(code);
     }
 }

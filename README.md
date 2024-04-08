@@ -336,3 +336,161 @@ save()메서드를 사용하여 업데이트되기 전에 실행되는 데코레
 그러나 모델에서 정보가 변경된 경우에만 @BeforeUpdate() 데코레이터가 실행한다는 점에 유의하십시오. 모델에서 아무 것도 수정하지 않고 저장을 실행하면 @BeforeUpdate 및 @AfterUpdate가 실행되지 않습니다. (update메서드를 사용할 때는 실행하지 않음)
 
 https://github.com/typeorm/typeorm/blob/master/docs/listeners-and-subscribers.md#beforeupdate
+
+
+## Email Verification
+### 1. One-to-one relations (1:1관계)
+
+일대일 관계는 A가 B의 인스턴스를 하나만 포함하고 B가 A의 인스턴스를 하나만 포함하는 관계입니다. 예를 들어 사용자 및 프로필 엔터티를 보면, 사용자는 하나의 프로필만 가질 수 있으며, 프로필은 하나의 사용자만 가질 수 있습니다.
+
+프로필에 @OneToOne을 추가하고 대상 관계 유형을 프로필로 지정했습니다.
+또한 relation의 한쪽에만 설정해야 하는 @JoinColumn() 을 추가했습니다. (@JoinColumn()은 필수로 지정해야 함)
+@JoinColumn()을 설정한 쪽의 테이블에는 해당되는 엔터티 테이블에 대한 relation id와 foreign keys가 포함됩니다.
+@JoinColumn은 관계의 한 쪽, 즉 데이터베이스 테이블에 foreign key가 있어야 하는 쪽에만 설정해야 합니다.
+
+요약: Verification을 통해 그 안에 User에 접근해서 User의 emailVerified를 false에서 true로 바꿀 것이기 때문에 Verification쪽에 @JoinColumn()을 추가하고 user를 통해 생성한 foreign key인 userId을 추가하도록 한 것이다.
+```
+@OneToOne(() => Profile)
+@JoinColumn()
+profile: Profile;
+
+위와 같이 설정시 데이터베이스에는 profile에 대한 foreign key가 생김
+profileId | int(11) | FOREIGN KEY
+```
+https://typeorm.io/#/one-to-one-relations
+
+
+### 2. uuid
+npm i uuid
+```
+import { v4 as uuidv4 } from 'uuid';
+uuidv4(); // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d'
+```
+https://www.npmjs.com/package/uuid
+
+uuid 앞에 4개 문자만 추출해서 저장하기
+uuidv4().substring(0, 4).toUpperCase() // CF26
+
+Verification엔티티를 생성하고 난 후 user에 위에서 생성한 User 엔티티를 넣을 때 주의할 점은 await this.userRepository.save(createdUser)를 통해 모델을 DB에 완전히 저장한 후 넣어줘야 한다. 그렇지 않으면 user에 User데이터가 제대로 들어가지 않고, null값이 들어가게 된다.
+```
+await this.verificationRepository.create({
+code: '',
+user: createdUser,
+});
+```
+
+자바스크립트로 랜덤 문자열 추출하기
+Math.random().toString(36).substring(2)
+
+7:24초 부분에서 영상 멈춘 이후, 작성한 코드입니다.
+영상 멈추면 새로고침 후 7:28초쯤으로 돌려서 재생해보세요.
+await this.verifications.save(this.verifications.create({ user }));
+
+### 3. relations
+Prisma에서처럼 TypeORM에서도 관계를 가지고 있는 필드는 TypeORM에 따로 지정하지 않으면 자동으로 해당 필드를 보여주지 않는다.
+
+loadRelationIds: true
+true로 설정시 relation id값을 가져온다. (userId: 10)
+엔터티의 모든 관계 ID를 로드하고 관계 개체가 아닌 관계 값에 매핑합니다.
+
+relations
+loadRelationIds를 통해 relation id만 가져올 수도 있고, relations를 통해 해당 필드의 전체 데이터를 가져올 수도 있다.
+```
+await this.verificationRepository.findOne({ code },{ relations: ['user'] },);
+
+await userRepository.find({ relations: ["profile"] });
+```
+
+### 4. 다른 방법
+비밀번호를 해시하지 않고 emailVerified를 false에서 true로 업데이트 하는 또 다른 방법입니다.
+앞서 update()를 실행하게 되면 @BeforeUpdate()데코레이터가 실행되지 않는 것을 이용해서 아래와 같이 간단하게 update()메서드를 이용해서 verified를 true로 바꿔줄 수도 있습니다.
+(password컬럼에 select:false를 지정해주지 않아도 됩니다.)
+ex) await this.userRepository.update(foundVerification.user.id, { emailVerified: true });
+
+@Column({ select: false })
+QueryBuilder나 find 실행자(find메서드들)를 통해 해당 엔티티를 가져올 때 해당 column을 항상 선택되어질지 여부를 나타냅니다. 기본값은 "true"입니다.
+false로 지정하게 되면 해당 column을 DB로부터 찾아오지 않는다.
+https://typeorm.delightful.studio/interfaces/_decorator_options_columnoptions_.columnoptions.html
+
+### 5. Mailgun
+개발자를 위한 트랜잭션 이메일 API 서비스
+https://www.mailgun.com
+
+Receive SMS Online
+온라인으로 즉시 SMS 수신
+https://receive-smss.com/
+
+### 6. NestJS Mailer
+Nodemailer 라이브러리를 사용하는 Nest.js 프레임워크(node.js)용 메일러 모듈
+https://nest-modules.github.io/mailer
+https://github.com/nest-modules/mailer
+
+Dynamic module use case
+https://docs.nestjs.com/fundamentals/dynamic-modules#dynamic-module-use-case
+
+MAILGUN_API_KEY
+MAILGUN_DOMAIN_NAME
+MAINGUN_FROM_EMAIL
+
+### 7. Mailgun API
+cURL (Client URL)
+URL로 데이터를 전송하기 위한 커맨드 라인 툴 및 라이브러리
+curl은 데이터를 전송하기 위해 명령줄이나 스크립트에서 사용됩니다.
+curl은 다양한 통신 프로토콜을 이용하여 데이터를 전송하기 위한 라이브러리와 명령 줄 도구를 제공하는 컴퓨터 소프트웨어 프로젝트이다.
+
+GOT
+Node.js를 위한 인간 친화적이고 강력한 HTTP request 라이브러리
++ got 12버전 이상 사용시, 모듈을 import해올 때 오류가 발생하시는 분들은 12버전보다 아래인 11.8.3버전으로 설치해보세요
+npm i got@11.8.3
+https://www.npmjs.com/package/got
+
+Form-Data
+읽을 수 있는 "multipart/form-data" 스트림을 생성하는 라이브러리입니다. 다른 웹 애플리케이션에 form을 submit하고, 파일을 업로드하는 데 사용할 수 있습니다.
+npm i form-data
+
+이 예제에서는 문자열, 버퍼 및 파일 스트림을 포함하는 3개의 field가 있는 form을 구성합니다.
+```
+var FormData = require('form-data');
+var fs = require('fs');
+
+var form = new FormData();
+form.append('my_field', 'my value');
+form.append('my_buffer', new Buffer(10));
+form.append('my_file', fs.createReadStream('/foo/bar.jpg'));
+```
+https://www.npmjs.com/package/form-data
+
+Mailgun Doc
+https://documentation.mailgun.com/en/latest/quickstart-sending.html#how-to-start-sending-email
+
+Buffer란? Node.js 에서 제공하는 Binary의 데이터를 담을 수 있는 객체
+Binary 데이터란? 01001010과 같은 이진수 시스템으로 표현되는 데이터
+
+Node.js방식으로 Mailgun으로 메일 보내기
+
+cURL와 got을 사용하지 않고, Node.js방식으로도 아래와 같이 메일을 보낼 수 있습니다.
+mailgun.js을 require('mailgun.js')가 아닌 import로 가져오려면
+tsconfig.json에 compilerOptions에 esModuleInterop를 true로 설정해주시면 됩니다.
+```
+import formData from 'form-data';
+import Mailgun from 'mailgun.js';
+
+sendEmail(){
+const mailgun = new Mailgun(formData);
+const client = mailgun.client({ username: 'Nuber', key: this.mailOptions.mailgunApiKey });
+
+const messageData = {
+from: 'Nuber @mailgun-test.com>',
+to: 'nubereats@gmail.com',
+subject: 'Hello',
+template: 'nuber-eats',
+'v:username': 'test',
+'v:code': 'abcd123',
+};
+
+const response = await client.messages.create(this.mailOptions.mailgunDomainName, messageData);
+console.log('response', response);
+}
+```
+https://documentation.mailgun.com/en/latest/quickstart-sending.html#how-to-start-sending-email
+https://www.npmjs.com/package/mailgun.js

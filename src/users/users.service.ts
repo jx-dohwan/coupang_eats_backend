@@ -8,13 +8,16 @@ import { Repository } from "typeorm";
 import { CreateAccountInput, CreateAccountOutput } from "./dtos/create-account.dto";
 import { LoginInput, LoginOutput } from './dtos/login.dto';
 import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
+import { VerifyEmailOutput } from './dtos/verify-email.dto';
+import { MailService } from 'src/mail/mail.service';
 
 @Injectable() // 이 클래스가 서비스로서 NestJS에 의해 인스턴스화되고 관리될 수 있음을 나타냄
 export class UsersService {
     constructor(
         @InjectRepository(User) private readonly users: Repository<User>,
         @InjectRepository(Verification) private readonly verifications: Repository<Verification>,
-        private readonly jwtService: JwtService
+        private readonly jwtService: JwtService,
+        private readonly mailService: MailService
     ) { }
 
     async createAccount({ // 사용자 계정을 생성하는 비즈니스 로직 구현
@@ -37,7 +40,7 @@ export class UsersService {
                 }),
             );
             return { ok: true };
-            // mail 인증 서비스 구현 추가해야함
+            this.mailService.sendVerificationEmail(user.email, verification.code);
         } catch (e) {
             return { ok: false, error: "계정을 만들 수 없습니다." };
         }
@@ -100,7 +103,7 @@ export class UsersService {
                 user.verified = false;
                 await this.verifications.delete({ user: { id: user.id } });
                 const verification = await this.verifications.save(this.verifications.create({ user }));
-                // 추후 메일 확인 서비스를 넣을 예
+                this.mailService.sendVerificationEmail(user.email, verification.code)
             }
             if (password) {
                 user.password = password;
@@ -111,6 +114,24 @@ export class UsersService {
             };
         } catch (error) {
             return { ok: false, error: "프로파일을 업데이트할 수 없습니다." }
+        }
+    }
+
+    async verifyEmail(code: string): Promise<VerifyEmailOutput> {
+        try {
+            const verification = await this.verifications.findOne({
+                where: { code },
+                relations: ['user'],
+            });
+            if (verification) {
+                verification.user.verified = true;
+                await this.users.save(verification.user); // 인증이 되면 users에 저장해야한다.
+                await this.verifications.delete(verification.id); // 인증이 되면 Verification에서 삭제해야하고
+                return { ok: true }
+            }
+            return { ok: false, error: "인증을 찾을 수 없습니다." }
+        } catch (error) {
+            return { ok: false, error: "이메일을 확인할 수 없습니다." }
         }
     }
 }

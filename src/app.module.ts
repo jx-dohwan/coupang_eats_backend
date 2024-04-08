@@ -9,6 +9,9 @@ import * as Joi from 'joi';
 import { User } from './users/entities/user.entity';
 import { ScheduleModule } from '@nestjs/schedule';
 import { JwtModule } from './jwt/jwt.module';
+import { AuthModule } from './auth/auth.module';
+import { Verification } from './users/entities/verification.entity';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -23,6 +26,10 @@ import { JwtModule } from './jwt/jwt.module';
         DB_USERNAME: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
         DB_NAME: Joi.string().required(),
+        PRIVATE_KEY: Joi.string().required(),
+        MAILGUN_API_KEY: Joi.string().required(),
+        MAILGUN_DOMAIN_NAME: Joi.string().required(),
+        MAILGUN_FROM_EMAIL: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRoot({ // PostgreSQL 데이터베이스와 연결 구성
@@ -34,18 +41,26 @@ import { JwtModule } from './jwt/jwt.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // 'prod' 환경이 아닐 경우, 데이터베이스 스키마 자동 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // 'prod'와 'test' 환경이 아닐 경우, 로깅 활성화
-      entities: [User], // TypeORM이 사용할 엔티티 모델 배
+      entities: [User, Verification], // TypeORM이 사용할 엔티티 모델 배
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver, // 사용할 GraphQL 서버 드라이버를 ApolloDriver로 설정한다.
       autoSchemaFile: true, // 스키마 파일을 자동으로 생성하도록 설정한다.
     }),
     ScheduleModule.forRoot(),
-    
-    UsersModule,
+  
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
+    MailModule.forRoot({
+      apiKey: process.env.MAILGUN_API_KEY,
+      domain: process.env.MAILGUN_DOMAIN_NAME,
+      fromEmail: process.env.MAILGUN_FROM_EMAIL,
+    }),
+    AuthModule,
+    CommonModule,
+    UsersModule,
+
   ],
   controllers: [],
   providers: [],
