@@ -1,9 +1,10 @@
 import { Field, InputType, ObjectType, registerEnumType } from "@nestjs/graphql";
 import { IsBoolean, IsEmail, IsEnum, IsString } from "class-validator";
 import { CoreEntity } from "src/common/entities/core.entity";
-import { BeforeInsert, BeforeUpdate, Column, Entity } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany } from "typeorm";
 import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from "@nestjs/common";
+import { Restaurant } from "src/restaurants/entities/restaurant.entity";
 
 export enum UserRole {
     Client = 'Client', // 고객
@@ -37,6 +38,14 @@ export class User extends CoreEntity {
     @Field(type => Boolean)
     @IsBoolean()
     verified: boolean;
+
+
+    @Field(type => [Restaurant])
+    @OneToMany(
+        type => Restaurant,
+        restaurant => restaurant.owner,
+    )
+    restaurants:Restaurant[]
 
     @BeforeInsert() // 엔티티가 데이터베이스에 삽입되기 전에 자동으로 실행되도록 한다.
     @BeforeUpdate() // 엔티니가 데이터베이스에 업데이트 되기 전에 자동으로 실행되도록 한다.

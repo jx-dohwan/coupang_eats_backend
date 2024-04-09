@@ -494,3 +494,243 @@ console.log('response', response);
 ```
 https://documentation.mailgun.com/en/latest/quickstart-sending.html#how-to-start-sending-email
 https://www.npmjs.com/package/mailgun.js
+
+## Restaurant CRUD
+### 1. Many-to-one / one-to-many relations
+
+다대일/일대다 관계는 A가 B의 여러 인스턴스를 포함하지만 B는 A의 인스턴스를 하나만 포함하는 관계입니다. User 및 Photo 엔터티를 예로 들어 보겠습니다. 사용자는 여러 장의 사진을 가질 수 있지만 각 사진은 한 명의 사용자만 소유합니다.
+
+@OneToMany(): 일대다 관계에서 '다'에 속할 때 사용
+(DB에 해당 컬럼은 저장되지 않음)
+@ManyToOne(): 일대다 관계에서 '일'에 속할 때 사용
+(DB에 user면 userId로 id값만 저장됨)
+```
+@Entity()
+export class Photo {
+@ManyToOne(() => User, user => user.photos)
+user: User;
+}
+
+@Entity()
+export class User {
+@OneToMany(() => Photo, photo => photo.user)
+photos: Photo[];
+}
+```
+https://typeorm.io/#/many-to-one-one-to-many-relations
+
+### 2. Setting roles per handler(핸들러별 역할 설정): @SetMetadata()
+
+예를 들어 CatsController는 다른 route에 대해 다른 권한 체계를 가질 수 있습니다. 일부는 관리자만 사용할 수 있고 다른 일부는 모든 사람에게 공개될 수 있습니다. 유연하고 재사용 가능한 방식으로 role을 route에 사용하려면 어떻게 해야 합니까?
+여기서 custom metadata가 작동합니다. Nest는 @SetMetadata() 데코레이터를 통해 라우트 핸들러에 커스텀 메타데이터를 붙이는 기능을 제공합니다.
+ex) @SetMetadata('role', Role.Owner)
+key - 메타데이터가 저장되는 키를 정의하는 값
+value - 키와 연결될 메타데이터
+
+route에서 직접 @SetMetadata()를 사용하는 것은 좋은 습관이 아닙니다. 대신 아래와 같이 자신만의 데코레이터를 만듭니다.
+```
+import { SetMetadata } from '@nestjs/common';
+
+export const Roles = (...roles: string[]) => SetMetadata('roles', roles);
+```
+https://docs.nestjs.com/guards#setting-roles-per-handler
+
+### 3. AushGuard
+Global 가드는 모든 컨트롤러와 모든 route handler에 대해 전체 애플리케이션에서 사용됩니다.
+dependency injection 관점에서, 모듈 외부에서 등록된 전역 가드(위의 예에서와 같이 useGlobalGuards() 사용)는 dependency injection을 할 수 없습니다. 이는 이것이 모든 모듈의 context 외부에서 수행되기 때문입니다. 이 문제를 해결하기 위해 다음 구성을 사용하여 모든 모듈에서 직접 가드를 설정할 수 있습니다.
+
+app.module.ts
+```
+import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+
+@Module({
+providers: [
+{
+provide: APP_GUARD,
+useClass: RolesGuard,
+},
+],
+})
+export class AppModule {}
+```
+https://docs.nestjs.com/guards#binding-guards
+
+Metadata가 설정되어있지 않으면 public(누구나 접근 가능)
+Metadata가 설정되어있으면 private(특정 role만 접근 가능하도록 제한)
+
+Putting it all together
+이제 뒤로 돌아가서 이것을 RolesGuard와 연결해 보겠습니다. 현재 사용자에게 할당된 role을 처리 중인 현재 route에 필요한 실제 role과 비교하여 반환 값을 조건부로 만들고 싶습니다.
+https://docs.nestjs.com/guards#putting-it-all-together
+
+### 4. @RelationId
+속성에 특정 relation의 id를 로드합니다. 예를 들어 Post 엔터티에 Many-to-one이 있는 경우 새 속성을 @RelationId로 표시하여 새 Relation ID를 가질 수 있습니다. 이 기능은 many-to-many를 포함한 모든 종류의 관계에서 작동합니다. Relation ID는 표현용으로만 사용됩니다. 값을 연결할 때 기본 relation가 추가/제거/변경되지 않습니다.
+' ' '
+@Entity()
+export class Post {
+
+@ManyToOne(type => Category)
+category: Category;
+
+@RelationId((post: Post) => post.category) // you need to specify target relation
+categoryId: number;
+}
+' ' '
+https://github.com/typeorm/typeorm/blob/master/docs/decorator-reference.md#relationid
+
++ RelationId를 사용해도 되고, 아니면 레스토랑을 찾아올 때 아래와 같이 레스토랑의 owner가 로그인한 사용자인 레스토랑만을 찾아올 수도 있습니다.
+' ' '
+const foundRestaurant: Restaurant | undefined = await this.restaurantsRepository.findOne({
+id: restaurantId,
+owner: loggedInUser,
+});
+' ' '
+
+relations?: string[];
+로드해야 하는 엔티티의 관계를 나타냅니다. relation인 owner를 가져옵니다.
+ex) await this.restaurantsRepository.findOne({ id: restaurantId }, { relations: ['owner'] });
+
+loadRelationIds: boolean | object
+true로 설정하면 엔티티의 모든 relation ID를 로드하고 relation 객체가 아닌 관계 값에 매핑합니다. relation인 owner의 아이디만 로드해옵니다.
+ex) loadRelationIds: true
+ex) { loadRelationIds: { relations: ['owner'] } },
+'''
+loadRelationIds?: boolean | {
+relations?: string[];
+disableMixedMap?: boolean;
+};
+'''
+https://typeorm.delightful.studio/interfaces/_find_options_findmanyoptions_.findmanyoptions.html#loadrelationids
+
+### 5. Custom repositories
+
+데이터베이스 작업을 위한 메소드를 포함해야 하는 사용자 정의 리포지토리를 생성할 수 있습니다.
+일반적으로 사용자 지정 리포지토리는 단일 엔티티에 대해 생성되고 특정 쿼리를 포함합니다. 예를 들어, 주어진 성과 이름으로 사용자를 검색하는 findByName(firstName: string, lastName: string)이라는 메서드가 있다고 가정해 봅시다. 이 방법의 가장 좋은 위치는 Repository이므로 userRepository.findByName(...)과 같이 호출할 수 있습니다.
+```
+import {EntityRepository, Repository} from "typeorm";
+import {User} from "../entity/User";
+
+@EntityRepository(User)
+export class UserRepository extends Repository {
+
+findByName(firstName: string, lastName: string) {
+return this.findOne({ firstName, lastName });
+}
+
+}
+```
+https://typeorm.io/#/custom-repository
+
+### 6. @ResolveField()
+
+매 request마다 계산된 field값을 가져온다.
+(DB에는 존재하지 않고 GraphQL 스키마에만 존재)
+```
+@ResolveField('posts', returns => [Post])
+async getPosts(@Parent() author: Author) {
+const { id } = author;
+return this.postsService.findAll({ authorId: id });
+}
+```
+https://docs.nestjs.com/graphql/resolvers
+
+Int 오류시 => Number
+@ResolveField((returns) => Number)
+
+### 7. GraphQL argument decorators
+
+전용 데코레이터를 사용하여 표준 GraphQL resolver arguments에 접근할 수 있습니다. 다음은 Nest 데코레이터와 이들이 나타내는 일반 Apollo 매개변수를 비교한 것입니다.
+```
+@Root() / @Parent() => root/parent
+@Context(param?: string) => context / context[param]
+@Info(param?: string) => info / info[param]
+@Args(param?: string) => args / args[param]
+```
+https://docs.nestjs.com/graphql/resolvers#graphql-argument-decorators
+
+### 8. find
+
+where: 엔티티를 쿼리할 조건
+skip: 스킵할 엔티티 갯수
+take: 가져올 엔티티 갯수
+```
+userRepository.find({
+where: { project: { name: "TypeORM", initials: "TORM" } },
+relations: ["project"],
+});
+
+userRepository.find({
+order: {
+columnName: "ASC",
+},
+skip: 0,
+take: 10,
+});
+```
+https://typeorm.io/#/find-options/basic-options
+https://github.com/typeorm/typeorm/blob/master/docs/find-options.md#basic-options
+
+TypeORM Cursor Pagination
+https://www.npmjs.com/package/typeorm-cursor-pagination
+
+### 9. findAndCount()
+주어진 기준과 일치하는 모든 엔티티를 카운트하고, 찾아옵니다.
+ex) const [allPhotos, photosCount] = await photoRepository.findAndCount();
+
+findAndCount(options?: FindManyOptions)
+
+### 10. Like
+```
+import { Like } from "typeorm";
+
+const loadedPosts = await connection.getRepository(Post).find({
+title: Like("%out #%"),
+});
+
+위의 코드는 아래 쿼리를 실행합니다.
+SELECT * FROM "post" WHERE "title" LIKE '%out #%'
+```
+https://orkhan.gitbook.io/typeorm/docs/find-options#advanced-options
+https://github.com/typeorm/typeorm/blob/master/docs/find-options.md#advanced-options
+
+SQL - LIKE Clause
+SQL LIKE 절은 wildcard 연산자를 사용하여 값을 유사한 값과 비교하는 데 사용됩니다. 퍼센트 기호(%)는 0, 하나 또는 여러 문자를 나타냅니다. 밑줄(_)은 단일 숫자 또는 문자를 나타냅니다. 이러한 기호는 조합하여 사용할 수 있습니다.
+
+예시
+WHERE SALARY LIKE '200%' : 200으로 시작하는 모든 값을 찾습니다.
+WHERE SALARY LIKE '%200%': 어느 위치든 200이 있는 값을 찾습니다.
+WHERE SALARY LIKE '_00%': 두 번째 및 세 번째 위치에 00이 있는 값을 찾습니다.
+WHERE SALARY LIKE '%2': 2로 끝나는 값을 찾습니다.
+https://www.tutorialspoint.com/sql/sql-like-clause.htm
+
+### 11 ILike
+현재는 문제없이 ILike사용 가능합니다.
+https://orkhan.gitbook.io/typeorm/docs/find-options
+
+ILike
+ILike(`%${restaurantName}%`)
+```
+import { ILike } from "typeorm";
+
+const loadedPosts = await connection.getRepository(Post).find({
+title: ILike("%out #%"),
+});
+```
+
+Raw
+Raw((name) => `${name} ILIKE '%${restaurantName}%'`)
+```
+import { Raw } from "typeorm";
+
+const loadedPosts = await connection.getRepository(Post).find({
+likes: Raw("dislikes - 4"),
+});
+
+const loadedPosts = await connection.getRepository(Post).find({
+currentDate: Raw((alias) => `${alias} > NOW()`),
+});
+```
+
+
+
+

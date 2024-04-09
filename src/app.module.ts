@@ -12,6 +12,9 @@ import { JwtModule } from './jwt/jwt.module';
 import { AuthModule } from './auth/auth.module';
 import { Verification } from './users/entities/verification.entity';
 import { MailModule } from './mail/mail.module';
+import { RestaurantsModule } from './restaurants/restaurants.module';
+import { Restaurant } from './restaurants/entities/restaurant.entity';
+import { Category } from './restaurants/entities/category.entity';
 
 @Module({
   imports: [
@@ -41,14 +44,14 @@ import { MailModule } from './mail/mail.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // 'prod' 환경이 아닐 경우, 데이터베이스 스키마 자동 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // 'prod'와 'test' 환경이 아닐 경우, 로깅 활성화
-      entities: [User, Verification], // TypeORM이 사용할 엔티티 모델 배
+      entities: [User, Verification, Restaurant, Category], // TypeORM이 사용할 엔티티 모델 배
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver, // 사용할 GraphQL 서버 드라이버를 ApolloDriver로 설정한다.
       autoSchemaFile: true, // 스키마 파일을 자동으로 생성하도록 설정한다.
     }),
     ScheduleModule.forRoot(),
-  
+
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
@@ -60,9 +63,10 @@ import { MailModule } from './mail/mail.module';
     AuthModule,
     CommonModule,
     UsersModule,
+    RestaurantsModule,
 
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
