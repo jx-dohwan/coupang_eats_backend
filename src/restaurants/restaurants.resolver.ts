@@ -15,6 +15,10 @@ import { AllCategoriesOutput } from "./dtos/all-categories.dto";
 import { CategoryInput, CategoryOutput } from "./dtos/category.dto";
 import { RestaurantInput, RestaurantOutput } from "./dtos/restaurant.dto";
 import { SearchRestaurantInput, SearchRestaurantOutput } from "./dtos/search-restaurant.dto";
+import { Dish } from "./entities/dish.entity";
+import { CreateDishInput, CreateDishOutput } from "./dtos/create-dish.dto";
+import { EditDishInput, EditDishOutput } from "./dtos/edit-dish.dto";
+import { DeleteDishInput, DeleteDishOutput } from "./dtos/delete-dish.dto";
 
 // RestaurantResolver 클래스를 정의합니다. @Resolver 데코레이터를 사용하여 이 클래스가 Restaurant 모델의 resolver임을 명시합니다.
 @Resolver(of => Restaurant)
@@ -125,5 +129,37 @@ export class CategoryResolver {
         @Args('input') categoryInput: CategoryInput,
     ): Promise<CategoryOutput> {
         return this.restaurantService.findCategoryBySlug(categoryInput);
+    }
+}
+
+@Resolver(of => Dish)
+export class DishResolver {
+    constructor(private readonly restaurantService: RestaurantService) { }
+
+    @Mutation(type => CreateDishOutput)
+    @Role(['Owner'])
+    createDish(
+        @AuthUser() owner: User,
+        @Args('input') createDishInput: CreateDishInput,
+    ): Promise<CreateDishOutput> {
+        return this.restaurantService.createDish(owner, createDishInput);
+    }
+
+    @Mutation(type => EditDishOutput)
+    @Role(['Owner'])
+    editDish(
+        @AuthUser() owner: User,
+        @Args('input') editDishInput: EditDishInput,
+    ): Promise<EditDishOutput> {
+        return this.restaurantService.editDish(owner, editDishInput);
+    }
+
+    @Mutation(type => DeleteDishOutput)
+    @Role(['Owner'])
+    deleteDish(
+        @AuthUser() owner: User,
+        @Args('input') deleteDishInput: DeleteDishInput,
+    ): Promise<DeleteDishOutput> {
+        return this.restaurantService.deleteDish(owner, deleteDishInput);
     }
 }

@@ -1,3 +1,4 @@
+import { CreateDishInput, CreateDishOutput } from './dtos/create-dish.dto';
 import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Restaurant } from "./entities/restaurant.entity";
@@ -15,13 +16,16 @@ import { CategoryInput, CategoryOutput } from "./dtos/category.dto";
 import { RestaurantsInput, RestaurantsOutput } from "./dtos/restaurants.dto";
 import { RestaurantInput, RestaurantOutput } from "./dtos/restaurant.dto";
 import { SearchRestaurantInput, SearchRestaurantOutput } from "./dtos/search-restaurant.dto";
+import { Dish } from './entities/dish.entity';
+import { EditDishInput, EditDishOutput } from './dtos/edit-dish.dto';
+import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
 
 @Injectable()
 export class RestaurantService {
     constructor(
-        @InjectRepository(Restaurant)
-        private readonly restaurants: Repository<Restaurant>,
+        @InjectRepository(Restaurant) private readonly restaurants: Repository<Restaurant>,
         private readonly categories: CategoryRepository,
+        @InjectRepository(Dish) private readonly dishes: Repository<Dish>,
     ) { }
 
     // Restaurant
@@ -75,6 +79,7 @@ export class RestaurantService {
         try {
             const restaurant = await this.restaurants.findOne({
                 where: { owner: { id: owner.id }, id: id },
+                relations: ['menu', 'orders'],
             });
             return {
                 restaurant,
@@ -277,9 +282,9 @@ export class RestaurantService {
                 };
             }
             const restaurants = await this.restaurants.find({
-                where: { 
+                where: {
                     category: {
-                        id: category.id, 
+                        id: category.id,
                     },
                 },
 
@@ -305,5 +310,118 @@ export class RestaurantService {
         }
     }
 
+
+    // Dish
+    async createDish(
+        owner: User,
+        createDishInput: CreateDishInput,
+    ): Promise<CreateDishOutput> {
+        try {
+            const restaurant = await this.restaurants.findOne({
+                where: { id: createDishInput.restaurantId },
+            });
+            if (!restaurant) {
+                return {
+                    ok: false,
+                    error: '식당을 찾을 수 없습니다.'
+                };
+            }
+            if (owner.id !== restaurant.ownerId) {
+                return {
+                    ok: false,
+                    error: '권한이 없습니다.'
+                };
+            }
+            await this.dishes.save(
+                this.dishes.create({ ...createDishInput, restaurant })
+            );
+            return {
+                ok: true
+            };
+        } catch (error) {
+            console.log(error);
+            return {
+                ok: false,
+                error: 'dish를 만들 수 없습니다.'
+            }
+        }
+    }
+
+    async editDish(
+        owner: User,
+        editDishInput: EditDishInput,
+    ): Promise<EditDishOutput> {
+        try {
+            const dish = await this.dishes.findOne({
+                where: {
+                    id: editDishInput.dishId,
+                },
+                relations: ['restaurant'],
+            });
+
+            if (!dish) {
+                return {
+                    ok: false,
+                    error: 'Dish를 찾을 수 없습니다.'
+                };
+            }
+            if (dish.restaurant.ownerId !== owner.id) {
+                return {
+                    ok: false,
+                    error: '권한이 없습니다.',
+                };
+            }
+            await this.dishes.save([
+                {
+                    id: editDishInput.dishId,
+                    ...editDishInput,
+                },
+            ]);
+            return {
+                ok: true,
+            }
+        } catch {
+            return {
+                ok: false,
+                error: 'dish를 삭제할 수 없습니다.'
+            }
+        }
+    }
+
+    async deleteDish(
+        owner: User,
+        { dishId }: DeleteDishInput,
+
+    ): Promise<DeleteDishOutput> {
+        try {
+            const dish = await this.dishes.findOne({
+                where: {
+                    id: dishId,
+                },
+                relations: ['restaurant'],
+            });
+            if (!dish) {
+                return {
+                    ok: false,
+                    error: 'Dish를 찾을 수 없습니다.'
+                };
+            }
+            if (dish.restaurant.ownerId !== owner.id) {
+                return {
+                    ok: false,
+                    error: '권한이 없습니다.'
+                };
+            }
+            await this.dishes.delete(dishId);
+            return {
+                ok: true,
+            };
+        } catch {
+            return {
+                ok: false,
+                error: 'dish를 삭제할 수 없습니다.'
+            }
+        }
+    }
 
 }
