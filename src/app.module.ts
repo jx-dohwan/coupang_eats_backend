@@ -20,6 +20,8 @@ import { OrdersModule } from './orders/orders.module';
 import { Order } from './orders/entities/order.entity';
 import { OrderItem } from './orders/entities/order-item.entity';
 import { Context } from 'apollo-server-core';
+import { PaymentsModule } from './payments/payments.module';
+import { UploadsModule } from './uploads/uploads.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { Context } from 'apollo-server-core';
         MAILGUN_API_KEY: Joi.string().required(),
         MAILGUN_DOMAIN_NAME: Joi.string().required(),
         MAILGUN_FROM_EMAIL: Joi.string().required(),
+        ACCESS_KEY_ID: Joi.string().required(),
+        SECRET_ACCESS_KEY: Joi.string().required(),
       }),
     }),
     TypeOrmModule.forRoot({ // PostgreSQL 데이터베이스와 연결 구성
@@ -81,6 +85,8 @@ import { Context } from 'apollo-server-core';
     UsersModule,
     RestaurantsModule,
     OrdersModule,
+    PaymentsModule,
+    UploadsModule,
 
   ],
   controllers: [],
