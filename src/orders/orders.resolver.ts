@@ -94,6 +94,7 @@ export class OrderResolver {
             return order.id === input.id; // 추가적으로, input으로 전달된 주문 ID와 이벤트 데이터의 주문 ID가 일치하는 경우에만 true를 반환
         },
     })
+    
     @Role(['Any']) // 'Any' 역할을 가진 사용자가 접근 가능하도록 설정
     orderUpdates(@Args('input') orderUpdatesInput: OrderUpdatesInput) {
         return this.pubSub.asyncIterator(NEW_ORDER_UPDATE); // NEW_ORDER_UPDATE 이벤트를 기반으로 비동기 이터레이터를 생성하여 반환합니다.

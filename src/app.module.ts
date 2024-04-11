@@ -22,6 +22,7 @@ import { OrderItem } from './orders/entities/order-item.entity';
 import { Context } from 'apollo-server-core';
 import { PaymentsModule } from './payments/payments.module';
 import { UploadsModule } from './uploads/uploads.module';
+import { Payment } from './payments/entities/payment.entity';
 
 @Module({
   imports: [
@@ -53,7 +54,7 @@ import { UploadsModule } from './uploads/uploads.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', // 'prod' 환경이 아닐 경우, 데이터베이스 스키마 자동 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', // 'prod'와 'test' 환경이 아닐 경우, 로깅 활성화
-      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem], // TypeORM이 사용할 엔티티 모델 배
+      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem, Payment], // TypeORM이 사용할 엔티티 모델 배
     }),
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver, // 사용할 GraphQL 서버 드라이버를 ApolloDriver로 설정한다.

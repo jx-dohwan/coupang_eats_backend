@@ -55,7 +55,10 @@ export class Order extends CoreEntity {
 
     @Field(type => [OrderItem])  // OrderItem 배열 타입 필드
     @ManyToMany(type => OrderItem, { eager: true })  // ManyToMany 관계, OrderItem 엔티티와
-    @JoinTable()  // JoinTable 데코레이터: 현재 엔티티(Order)와 ManyToMany 관계에 있는 엔티티(OrderItem)를 연결하는 테이블 생성
+    // many to many이기 때문에 join을 해줘야 한다.
+    // JoinTable 데코레이터: 현재 엔티티(Order)와 ManyToMany 관계에 있는 엔티티(OrderItem)를 연결하는 테이블 생성
+    // 소유하고 있는 쪽의 relation에 추가하면 된다. 
+    @JoinTable()
     items: OrderItem[];  // items 필드는 여러 OrderItem 엔티티를 배열로 가집니다.
 
     @Column({ nullable: true })  // 데이터베이스 컬럼 설정: NULL 허용

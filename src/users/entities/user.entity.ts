@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from "@nestjs/common";
 import { Restaurant } from "src/restaurants/entities/restaurant.entity";
 import { Order } from "src/orders/entities/order.entity";
+import { Payment } from "src/payments/entities/payment.entity";
 
 export enum UserRole {
     Client = 'Client', // 고객
@@ -62,7 +63,14 @@ export class User extends CoreEntity {
     )
     rides: Order[];
 
-
+    @Field(type => [Payment])
+    @OneToMany(
+      type => Payment,
+      payment => payment.user,
+      { eager: true },
+    )
+    payments: Payment[];
+  
     @BeforeInsert() // 엔티티가 데이터베이스에 삽입되기 전에 자동으로 실행되도록 한다.
     @BeforeUpdate() // 엔티니가 데이터베이스에 업데이트 되기 전에 자동으로 실행되도록 한다.
     async hashPassword(): Promise<void> {
