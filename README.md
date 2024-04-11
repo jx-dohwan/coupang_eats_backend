@@ -760,3 +760,158 @@ TypeORM은 가장 일반적으로 사용되는 데이터베이스 지원 Column 
 ```
 https://orkhan.gitbook.io/typeorm/docs/entities#column-types
 
+
+## Order CRUD
+
+### 1. Many-to-many relations
+
+다대다 관계는 A가 B의 여러 인스턴스를 포함하고 B가 A의 여러 인스턴스를 포함하는 관계입니다. Question 및 Category 엔터티를 예로 들어 보겠습니다. Question에는 여러 Category가 있을 수 있으며 각 Category에는 여러 Question이 있을 수 있습니다. @ManyToMany 관계에는 @JoinTable()이 필요합니다. @JoinTable은 관계의 한쪽(소유) 쪽에 넣어야 합니다.
+```
+@ManyToMany(() => Category)
+@JoinTable()
+categories: Category[]
+```
+https://typeorm.io/#/many-to-many-relations
+https://orkhan.gitbook.io/typeorm/docs/many-to-many-relations
+
+### 2. for...of
+
+for...of 명령문은 반복가능한 객체 (Array, Map, Set, String, TypedArray, arguments 객체 등을 포함)에 대해서 반복하고 각 개별 속성값에 대해 실행되는 문이 있는 사용자 정의 반복 후크를 호출하는 루프를 생성합니다.
+```
+const array1 = ['a', 'b', 'c'];
+
+for (const element of array1) {
+console.log(element);
+}
+
+// expected output: "a"
+// expected output: "b"
+// expected output: "c"
+```
+https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Statements/for...of
+
+### 3. Array.prototype.flat()
+
+ex) const newArr = arr.flat([depth])
+flat() 메서드는 모든 하위 배열 요소를 지정한 깊이까지 재귀적으로 이어붙인 새로운 배열을 생성합니다. dept는 중첩 배열 구조를 평탄화할 때 사용할 깊이 값. 기본값은 1입니다.
+
+// 중첩 배열 평탄화
+```
+[ [1], [2], [], [], [5], [6] ].flat()
+// [1, 2, 5, 6]
+
+const arr1 = [1, 2, [3, 4]];
+arr1.flat();
+// [1, 2, 3, 4]
+
+const arr4 = [1, 2, [3, 4, [5, 6, [7, 8, [9, 10]]]]];
+arr4.flat(Infinity);
+// [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+```
+// 배열 구멍 제거
+```
+const arr5 = [1, 2, , 4, 5];
+arr5.flat();
+// [1, 2, 4, 5]
+```
+https://developer.mozilla.org/ko/docs/Web/JavaScript/Reference/Global_Objects/Array/flat
+
+
+
+## Order Subscriptions
+### 1. graphql-subscriptions
+
+GraphQL subscriptions은 GraphQL에서 subscriptions을 구현하기 위해 Redis와 같은 pubsub 시스템과 GraphQL을 연결할 수 있는 간단한 npm 패키지입니다.
+모든 GraphQL 클라이언트 및 서버(Apollo뿐만 아니라)와 함께 사용할 수 있습니다.
+
+npm i graphql-subscriptions
+https://www.npmjs.com/package/graphql-subscriptions
+
+Subscriptions 활성화
+subscriptions을 활성화하려면 installSubscriptionHandlers 속성을 true로 설정하십시오.
+ex) installSubscriptionHandlers: true
+https://docs.nestjs.com/graphql/subscriptions
+
+### 2. Pubsub
+
+```
+import { PubSub } from 'graphql-subscriptions';
+
+const pubsub = new PubSub();
+
+const resolvers = {
+Subscription: {
+somethingChanged: {
+subscribe: () => pubsub.asyncIterator("hello"),
+},
+},
+}
+
+// pubsub.publish를 사용할 때마다 우리가 사용하는 전송을 사용하여 publish합니다.
+pubsub.publish("hello", { somethingChanged: { id: "123" }});
+```
+https://www.apollographql.com/docs/graphql-subscriptions/setup/#pubsub
+
+### 3. graphql-redis-subscriptions
+
+https://github.com/davidyaha/graphql-redis-subscriptions
+
+### 4. Filtering subscriptions
+
+Subscriptions을 사용할 때 특정 이벤트를 필터링하려면 필터 속성을 필터 함수로 설정할 수 있습니다.
+
+payload: pubsub.publish()를 통해 전달한 객체
+variables: subscription에 전달한 객체(인자)
+context: gqlContext객체
+```
+@Subscription(returns => Comment, {
+filter: (payload, variables, context) =>
+payload.commentAdded.title === variables.title,
+})
+commentAdded(@Args('title') title: string) {
+return pubSub.asyncIterator('commentAdded');
+}
+```
+https://docs.nestjs.com/graphql/subscriptions#filtering-subscriptions
+
+### 5. Mutating subscription payloads (resolve)
+
+resolver함수가 리턴하는 값은 pubsub.asyncIterator()를 통해 받는 값이 됩니다. publish한 event payload를 변형하려면 resolve 속성을 함수로 설정합니다. 함수는 이벤트 payload를 수신하고 적절한 값을 반환합니다.
+```
+@Subscription(returns => Comment, {
+resolve: value => value,
+})
+commentAdded() {
+return pubSub.asyncIterator('commentAdded');
+}
+```
+https://docs.nestjs.com/graphql/subscriptions#mutating-subscription-payloads
+
+### 6. Eager relations
+Eager relation은 데이터베이스에서 엔티티를 로드할 때마다 자동으로 relation 필드들을 로드합니다. (eager: true를 추가)
+```
+@ManyToMany(type => Category, category => category.questions, {
+eager: true
+})
+@JoinTable()
+categories: Category[];
+```
+https://orkhan.gitbook.io/typeorm/docs/eager-and-lazy-relations#eager-relations
+
+Lazy relations
+Lazy relation은 해당 필드에 접근하면 로드됩니다. Lazy relation은 타입으로 Promise를 가져야 합니다. Promise에 값을 저장하고 로드할 때도 Promise를 반환합니다.
+```
+@ManyToMany(type => Question, question => question.categories)
+questions: Promise< Question[]>;
+
+@ManyToMany(type => Category, category => category.questions)
+@JoinTable()
+categories: Promise< Category[]>;
+
+const question = await connection.getRepository(Question).findOne(1);
+const categories = await question.categories;
+```
+https://orkhan.gitbook.io/typeorm/docs/eager-and-lazy-relations#lazy-relations
+
+
+

@@ -1,5 +1,5 @@
 import { CreateDishInput, CreateDishOutput } from './dtos/create-dish.dto';
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Restaurant } from "./entities/restaurant.entity";
 import { Raw, Repository } from "typeorm";
@@ -19,6 +19,7 @@ import { SearchRestaurantInput, SearchRestaurantOutput } from "./dtos/search-res
 import { Dish } from './entities/dish.entity';
 import { EditDishInput, EditDishOutput } from './dtos/edit-dish.dto';
 import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
+
 
 @Injectable()
 export class RestaurantService {
