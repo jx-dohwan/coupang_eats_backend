@@ -6,6 +6,7 @@ import { Column, Entity, ManyToOne, OneToMany, RelationId } from 'typeorm';
 import { Category } from './category.entity';
 import { Dish } from './dish.entity';
 import { Order } from 'src/orders/entities/order.entity';
+import { Reviews } from './reviews.entity';
 
 @InputType('RestaurantInputType', { isAbstract: true })
 @ObjectType()
@@ -68,5 +69,13 @@ export class Restaurant extends CoreEntity {
         order => order.restaurant,
     )
     orders: Order[];
+
+    @Field(type => [Reviews])
+    @OneToMany(
+        type => Reviews,
+        review => review.restaurant,
+        { onDelete: 'CASCADE', eager: true } // 식당 삭제 시 모든 리뷰 삭제
+    )
+    reviews?:Reviews[];
 
 }

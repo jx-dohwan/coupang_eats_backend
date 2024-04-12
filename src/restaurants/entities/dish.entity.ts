@@ -54,7 +54,7 @@ export class Dish extends CoreEntity {
 
     @Field(type => Restaurant)
     @ManyToOne(
-        type => Restaurant,               // "One" 측: 이 관계에서 Restaurant은 "One" 측입니다. 이는 하나의 Restaurant 엔티티가 여러 Menu 엔티티(현재 코드 상황에서 Menu 엔티티는 restaurant 필드를 통해 표현됨)와 연결될 수 있음을 의미합니다.
+        type => Restaurant,              
         restaurant => restaurant.menu,   // "Many" 측: Restaurant 엔티티 내의 menu 속성은 "Many" 측을 나타냅니다.여기서 Menu 엔티티는 Many 측에 위치하며, 각 Menu 엔티티는 하나의 Restaurant 엔티티에 연결됩니다(이 코드에서는 restaurant 필드로 연결).
         { onDelete: 'CASCADE' },         // onDelete 옵션: Restaurant이 삭제될 경우 연관된 Menu 엔티티들도 함께 삭제됩니다(CASCADE).
     )
