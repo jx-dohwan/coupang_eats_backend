@@ -22,6 +22,7 @@ import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
 import { Reviews } from './entities/reviews.entity';
 import { CreateReviewInput, CreateReviewOutput } from './dtos/create-review.dto';
 import { EditReviewInput, EditReviewOutput } from './dtos/edit-review.dto';
+import { DeleteReviewInput, DeleteReviewOutput } from './dtos/delete-review.dto';
 
 
 @Injectable()
@@ -504,7 +505,7 @@ export class RestaurantService {
             return {
                 ok: true
             };
-            
+
         } catch {
             return {
                 ok: false,
@@ -513,5 +514,44 @@ export class RestaurantService {
         }
     }
 
+    async deleteReview(
+        client: User,
+        { reviewId }: DeleteReviewInput,
+    ): Promise<DeleteReviewOutput> {
+        try {
+            const review = await this.reviews.findOne({
+                where: {
+                    id: reviewId,
+                },
+                relations: ['restaurant'],
+            });
+
+            if (!review) {
+                return {
+                    ok: false,
+                    error: '해당 리뷰를 찾을 수 없습니다.'
+                };
+            }
+
+            if (review.clientId !== client.id) {
+                return {
+                    ok: false,
+                    error: '당신은 해당 권한이 없습니다.'
+                };
+            }
+
+            await this.reviews.delete(reviewId);
+
+            return {
+                ok: true,
+            };
+
+        } catch {
+            return {
+                ok: false,
+                error: '해당 리뷰를 삭제할 수 없습니다.'
+            };
+        }
+    }
 
 }
