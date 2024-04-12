@@ -28,7 +28,10 @@ export class UsersService {
         try {
             const exists = await this.users.findOne({ where: { email } }); // 데이터베이스에서 주어진 이메일과 일치하는 사용자가 있는지 조회
             if (exists) { // 이미 존재하는 이메일이면, 실패 응답을 반환
-                return { ok: false, error: "해당 이메일을 사용하는 사용자가 이미 있습니다." };
+                return {
+                    ok: false,
+                    error: "해당 이메일을 사용하는 사용자가 이미 있습니다."
+                };
             }
             // 새 사용자 엔티티를 생성하고 데이터베이스에 저장
             const user = await this.users.save( // 엔티티 인스턴스를 DB에 저장거나 업데이트한다. 신규엔티티를 저장할때와 기존 엔티티를 업데이트 할 때 모두 사용한다. 즉, 필요에 따라 Insert할지, update할지 결정한다.
@@ -39,10 +42,17 @@ export class UsersService {
                     user,
                 }),
             );
-            return { ok: true };
+
             this.mailService.sendVerificationEmail(user.email, verification.code);
-        } catch (e) {
-            return { ok: false, error: "계정을 만들 수 없습니다." };
+
+            return {
+                ok: true
+            };
+        } catch {
+            return {
+                ok: false,
+                error: "계정을 만들 수 없습니다"
+            };
         }
     }
 
@@ -62,7 +72,7 @@ export class UsersService {
             if (!passwordCorrect) {
                 return {
                     ok: false,
-                    error: "잘못된 비밀번호 입니다."
+                    error: "잘못된 비밀번호입니다."
                 };
             }
             const token = this.jwtService.sign(user.id);
@@ -113,7 +123,7 @@ export class UsersService {
                 ok: true,
             };
         } catch (error) {
-            return { ok: false, error: "프로파일을 업데이트할 수 없습니다." }
+            return { ok: false, error: "프로필을 업데이트할 수 없습니다." }
         }
     }
 
