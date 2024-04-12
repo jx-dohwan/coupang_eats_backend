@@ -19,6 +19,8 @@ import { SearchRestaurantInput, SearchRestaurantOutput } from "./dtos/search-res
 import { Dish } from './entities/dish.entity';
 import { EditDishInput, EditDishOutput } from './dtos/edit-dish.dto';
 import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
+import { Reviews } from './entities/reviews.entity';
+import { CreateReviewInput, CreateReviewOutput } from './dtos/create-review.dto';
 
 
 @Injectable()
@@ -27,6 +29,7 @@ export class RestaurantService {
         @InjectRepository(Restaurant) private readonly restaurants: Repository<Restaurant>,
         private readonly categories: CategoryRepository,
         @InjectRepository(Dish) private readonly dishes: Repository<Dish>,
+        @InjectRepository(Reviews) private readonly reviews: Repository<Reviews>
     ) { }
 
     // Restaurant
@@ -424,5 +427,61 @@ export class RestaurantService {
             }
         }
     }
+
+
+    // Reviews
+    async createReview(
+        client: User,
+        createReviewInput: CreateReviewInput,
+    ): Promise<CreateReviewOutput> {
+        try {
+            const restaurant = await this.restaurants.findOne({
+                where: { id: createReviewInput.restaurantId },
+                // relations: ['reviews'],
+            });
+            console.log('이거는 restaurant', restaurant)
+            if (!restaurant) {
+                return {
+                    ok: false,
+                    error: '식당을 찾을 수 없습니다.'
+                };
+            }
+            /*
+            console.log('왜 userId가 없을까?---------------------- : ', createReviewInput)
+            const review = await this.reviews.findOne({
+                where: { id: createReviewInput.userId },
+                // relations: ['reviews'],
+            });
+
+            if (!review) {
+                return {
+                    ok: false,
+                    error: '사용자가 존재하지 않습니다.'
+                };
+            }*/
+
+            if (client.id !== createReviewInput.clientId) {
+                return {
+                    ok: false,
+                    error: "해당 권한이 없습니다."
+                };
+            }
+
+            await this.reviews.save(
+                this.reviews.create({ ...createReviewInput, restaurant, client })
+            );
+
+            return {
+                ok: true,
+            };
+        } catch (e) {
+            console.log(e)
+            return {
+                ok: false,
+                error: '리뷰를 생성할 수 없습니다.' + e.message
+            }
+        }
+    }
+
 
 }

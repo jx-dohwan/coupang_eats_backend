@@ -39,7 +39,7 @@ export class Reviews extends CoreEntity {
     @ManyToOne(
         type => Restaurant,
         restaurant => restaurant.reviews,
-        { onDelete: 'SET NULL', nullable: true, eager: true } // 리뷰 삭제 시 식당 참조를 NULL로
+        { onDelete: 'SET NULL', nullable: true,} // 리뷰 삭제 시 식당 참조를 NULL로
     )
     restaurant?: Restaurant;
 
@@ -50,12 +50,12 @@ export class Reviews extends CoreEntity {
     @ManyToOne(
         type => User,
         user => user.reviews,
-        { onDelete: 'SET NULL', nullable: true, eager: true }
+        { onDelete: 'SET NULL', nullable: true, }
     )
     client?: User;
 
     @RelationId((review: Reviews) => review.client)
-    userId: number;
+    clientId: number;
 
 
 }
