@@ -21,6 +21,7 @@ import { EditDishInput, EditDishOutput } from './dtos/edit-dish.dto';
 import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
 import { Reviews } from './entities/reviews.entity';
 import { CreateReviewInput, CreateReviewOutput } from './dtos/create-review.dto';
+import { EditReviewInput, EditReviewOutput } from './dtos/edit-review.dto';
 
 
 @Injectable()
@@ -437,28 +438,13 @@ export class RestaurantService {
         try {
             const restaurant = await this.restaurants.findOne({
                 where: { id: createReviewInput.restaurantId },
-                // relations: ['reviews'],
             });
-            console.log('이거는 restaurant', restaurant)
             if (!restaurant) {
                 return {
                     ok: false,
                     error: '식당을 찾을 수 없습니다.'
                 };
             }
-            /*
-            console.log('왜 userId가 없을까?---------------------- : ', createReviewInput)
-            const review = await this.reviews.findOne({
-                where: { id: createReviewInput.userId },
-                // relations: ['reviews'],
-            });
-
-            if (!review) {
-                return {
-                    ok: false,
-                    error: '사용자가 존재하지 않습니다.'
-                };
-            }*/
 
             if (client.id !== createReviewInput.clientId) {
                 return {
@@ -475,10 +461,54 @@ export class RestaurantService {
                 ok: true,
             };
         } catch (e) {
-            console.log(e)
             return {
                 ok: false,
-                error: '리뷰를 생성할 수 없습니다.' + e.message
+                error: '리뷰를 생성할 수 없습니다.'
+            }
+        }
+    }
+
+    async editReview(
+        client: User,
+        editReviewInput: EditReviewInput
+    ): Promise<EditReviewOutput> {
+        try {
+            const review = await this.reviews.findOne({
+                where: {
+                    id: editReviewInput.reviewId,
+                },
+                relations: ['restaurant'],
+            });
+
+            if (!review) {
+                return {
+                    ok: false,
+                    error: '리뷰를 찾을 수 없습니다.'
+                };
+            }
+
+            if (review.clientId !== client.id) {
+                return {
+                    ok: false,
+                    error: '당신은 해당 권한이 없습니다.'
+                };
+            }
+
+            await this.reviews.save([
+                {
+                    id: editReviewInput.reviewId,
+                    ...editReviewInput,
+                },
+            ]);
+
+            return {
+                ok: true
+            };
+            
+        } catch {
+            return {
+                ok: false,
+                error: '해당 리뷰를 수정할 수 없습니다.'
             }
         }
     }

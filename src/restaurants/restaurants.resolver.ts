@@ -21,6 +21,7 @@ import { EditDishInput, EditDishOutput } from "./dtos/edit-dish.dto";
 import { DeleteDishInput, DeleteDishOutput } from "./dtos/delete-dish.dto";
 import { Reviews } from "./entities/reviews.entity";
 import { CreateReviewInput, CreateReviewOutput } from "./dtos/create-review.dto";
+import { EditReviewInput, EditReviewOutput } from "./dtos/edit-review.dto";
 
 // RestaurantResolver 클래스를 정의합니다. @Resolver 데코레이터를 사용하여 이 클래스가 Restaurant 모델의 resolver임을 명시합니다.
 @Resolver(of => Restaurant)
@@ -177,6 +178,15 @@ export class ReviewsResolver {
         @Args('input') createReviewInput: CreateReviewInput,
     ): Promise<CreateReviewOutput> {
         return this.restaurantService.createReview(client, createReviewInput)
+    }
+
+    @Mutation(type => EditReviewOutput)
+    @Role(['Client'])
+    editReview(
+        @AuthUser() client:User,
+        @Args('input') editReviewInput:EditReviewInput,
+    ): Promise<EditReviewOutput> {
+        return this.restaurantService.editReview(client, editReviewInput);
     }
 
 }
