@@ -7,6 +7,8 @@ import { Dish } from "./entities/dish.entity";
 import { Reviews } from "./entities/reviews.entity";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CategoryRepository } from "./repositories/category.repository";
+import { User, UserRole } from "src/users/entities/user.entity";
+
 
 const mockRepository = () => ({
     findOne: jest.fn(),
@@ -22,12 +24,16 @@ const mockCategoryRepository = () => ({
     getOrCreate: jest.fn(),
 });
 
+type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+
+
 describe('RestaurantService', () => {
     let service: RestaurantService;
-    let restaurantRepository: Repository<Restaurant>;
-    let categoryRepository: CategoryRepository;
-    let dishRepository: Repository<Dish>;
-    let reviewRepository: Repository<Reviews>;
+    let restaurantRepository: MockRepository<Restaurant>;
+    let categoryRepository: MockRepository<Category>;
+    let dishRepository: MockRepository<Dish>;
+    let reviewRepository: MockRepository<Reviews>;
+    let user: User;
 
     beforeEach(async () => {
         const module = await Test.createTestingModule({
@@ -53,17 +59,158 @@ describe('RestaurantService', () => {
         }).compile();
 
         service = module.get<RestaurantService>(RestaurantService);
-        restaurantRepository = module.get<Repository<Restaurant>>(getRepositoryToken(Restaurant));
-        categoryRepository = module.get<CategoryRepository>(CategoryRepository);
-        dishRepository = module.get<Repository<Dish>>(getRepositoryToken(Dish));
-        reviewRepository = module.get<Repository<Reviews>>(getRepositoryToken(Reviews));
+        restaurantRepository = module.get(getRepositoryToken(Restaurant));
+        categoryRepository = module.get(CategoryRepository);
+        dishRepository = module.get(getRepositoryToken(Dish));
+        reviewRepository = module.get(getRepositoryToken(Reviews));
+        user = new User();
+        user.id = 1;
+        user.email = 'test1@test.com';
+        user.password = '12345';
+        user.role = UserRole.Owner;
+        user.verified = true;
+        user.restaurants = [];
+        user.orders = [];
+        user.rides = [];
+        user.payments = [];
+        user.reviews = [];
     });
 
     it('should be defined', () => {
         expect(service).toBeDefined();
     });
 
-    it.todo('createRestaurant');
+    describe('createRestaurant', () => {
+        const createRestaurantInput = {
+            name: '이름모를식당',
+            address: '버뮤다삼각지대',
+            coverImg: '',
+            categoryName: '소속없음'
+        };
+
+        it('should fail if restaurant exists', async () => {
+            restaurantRepository.findOne.mockResolvedValue({
+                id: 1,
+                name: '이름모를식당',
+                owner: user
+            });
+
+            const result = await service.createRestaurant(user, createRestaurantInput);
+
+            expect(result).toEqual({
+                ok: false,
+                error: '식당을 만들 수 없습니다.'
+            });
+      
+        });
+
+        // it('should succeed if restaurant does not exist', async () => {
+        //     restaurantRepository.findOne.mockResolvedValue(undefined);
+        //     restaurantRepository.save.mockResolvedValue({
+        //         id: 1,
+        //         name: createRestaurantInput.name,
+        //         owner: user,
+        //         category: { id: 1, name: createRestaurantInput.categoryName }
+        //     });
+
+        //     const result = await service.createRestaurant(user, createRestaurantInput);
+
+        //     expect(result).toEqual({
+        //         ok: true,
+        //         restaurantId: 1
+        //     });
+        //     expect(restaurantRepository.save).toHaveBeenCalledWith({
+        //         name: createRestaurantInput.name,
+        //         coverImg: createRestaurantInput.coverImg,
+        //         address: createRestaurantInput.address,
+        //         owner: user,
+        //         category: expect.any(Object) // Since category is mocked to always return { id: 1, name }
+        //     });
+        //     // expect(categoryRepository.getOrCreate).toHaveBeenCalledWith(createRestaurantInput.categoryName);
+        // });
+    });
+});
+
+
+
+
+/* ----------------------- 이 부분은 아직 보류중 ---------------------------------
+describe('RestaurantService', () => {
+    let service: RestaurantService;
+    let restaurantRepository: MockRepository<Restaurant>;
+    let categoryRepository: CategoryRepository;
+    let dishRepository: MockRepository<Dish>;
+    let reviewRepository: MockRepository<Reviews>;
+
+    beforeEach(async () => {
+        const module = await Test.createTestingModule({
+            providers: [
+                RestaurantService,
+                {
+                    provide: getRepositoryToken(Restaurant),
+                    useValue: mockRepository(),
+                },
+                {
+                    provide: CategoryRepository,
+                    useValue: mockCategoryRepository(),
+                },
+                {
+                    provide: getRepositoryToken(Dish),
+                    useValue: mockRepository(),
+                },
+                {
+                    provide: getRepositoryToken(Reviews),
+                    useValue: mockRepository(),
+                },
+            ],
+        }).compile();
+
+        service = module.get<RestaurantService>(RestaurantService);
+        restaurantRepository = module.get(getRepositoryToken(Restaurant));
+        categoryRepository = module.get<CategoryRepository>(CategoryRepository);
+        dishRepository = module.get(getRepositoryToken(Dish));
+        reviewRepository = module.get(getRepositoryToken(Reviews))
+
+    });
+
+    it('should be defined', () => {
+        expect(service).toBeDefined();
+    });
+
+    describe('createRestaurant', () => {
+        const createRestaurantOwner = {
+            id: 1,
+            email: 'test1@test.com',
+            password: '12345',
+            role: UserRole.Owner,
+            verified: true,
+            restaurants: [],
+            orders: [],
+            rides: [],
+            payments: [],
+            reviews: [],
+        };
+
+        const createRestaurantInput = {
+            name: '이름모를식당',
+            address: '버뮤다삼각지대',
+            coverImg: '',
+            categoryName: '소속없음'
+        };
+
+        it('should fail if restaurant exists', async () => {
+       
+            const result = await service.createRestaurant(createRestaurantOwner, createRestaurantInput);
+
+            expect(result).toEqual({
+                ok: false,
+                error: 'Restaurant already exists.'
+            });
+            expect(restaurantsRepository.findOne).toHaveBeenCalledWith({
+                where: { name: "Test Restaurant", owner: mockUser.id }
+            });
+        });
+    });
     it.todo('myRestaurants');
     it.todo('myRestaurant');
     it.todo('editRestaurant');
@@ -79,4 +226,4 @@ describe('RestaurantService', () => {
     it.todo('createReview');
     it.todo('editReview');
     it.todo('deleteReview');
-});
+});*/
