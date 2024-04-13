@@ -44,7 +44,7 @@ export class MailService {
     sendVerificationEmail(email: string, code: string) {
         this.sendEmail(
             "jx7789@gmail.com",
-            "우버이츠 계정 확인",
+            "coupang eats email verification",
             [
                 { key: "code", value: code },
                 { key: "username", value: email },
