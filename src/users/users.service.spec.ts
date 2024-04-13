@@ -93,7 +93,7 @@ describe('UsersService', () => {
             email: 'test@email.com',
             password: 'test.password',
             role: UserRole.Client,
-        };
+        }; 
 
         // "사용자가 이미 존재할 경우 실패해야 한다"는 시나리오를 테스트하는 it 블록
         it('should fail if user exists', async () => {
