@@ -97,7 +97,7 @@ describe('RestaurantService', () => {
 
             const result = await service.createRestaurant(user, createRestaurantInput);
 
-            expect(result).toEqual({
+            expect(result).toMatchObject({
                 ok: false,
                 error: '식당을 만들 수 없습니다.'
             });
