@@ -256,7 +256,7 @@ describe('RestaurantService', () => {
     describe('editRestaurant', () => {
         let editRestaurantInput: EditRestaurantInput;
         let restaurant: Restaurant;
-    
+
         beforeEach(() => {
             editRestaurantInput = {
                 restaurantId: 1,
@@ -265,14 +265,14 @@ describe('RestaurantService', () => {
                 coverImg: 'http://example.com/updated_img.png',
                 categoryName: 'Updated Category'
             };
-    
-     
+
+
         });
         it('should fail if restaurant does not exist', async () => {
             restaurantRepository.findOne.mockResolvedValue(null);  // Simulate not finding the restaurant
 
             const result = await service.editRestaurant(user, editRestaurantInput);
-    
+
             expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
             expect(restaurantRepository.findOne).toHaveBeenCalledWith({
                 where: { id: editRestaurantInput.restaurantId }
@@ -282,21 +282,30 @@ describe('RestaurantService', () => {
                 error: '식당을 찾을 수 없습니다.'
             });
         });
-    
+
         it('should fail if not the owner', async () => {
-    
+            restaurantRepository.findOne.mockResolvedValue(new Error());
+
+            const result = await service.editRestaurant(user, editRestaurantInput);
+
+            expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(result).toEqual({
+                ok: false,
+                error: "나의 식당이 아니면 수정할 수 없습니다."
+            });
         });
-        it('should change name', async () => {
         
+        it('should change name', async () => {
+
         })
         it('should change address', async () => {
-        
+
         })
         it('should change coverImg', async () => {
-        
+
         })
         it('should change coverImg', async () => {
-        
+
         })
     });
 
