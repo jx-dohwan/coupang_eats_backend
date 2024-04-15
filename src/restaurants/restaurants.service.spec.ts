@@ -107,16 +107,12 @@ describe('RestaurantService', () => {
         });
 
 
-        it('should create a new restaurant', async () => {
-            // restaurantRepository.findOne.mockResolvedValue(undefined);
+        it('should create a new restaurant', async () => { // 조금 애매하긴 함
             restaurantRepository.create.mockReturnValue(createRestaurantInput);
-            // categoryRepository.getOrCreate.mockResolvedValue(expect.any(String));
             restaurantRepository.save.mockResolvedValue(createRestaurantInput);
 
             const result = await service.createRestaurant(user, createRestaurantInput);
 
-            // expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
-            // expect(restaurantRepository.findOne).toHaveBeenCalledWith(result);
             expect(restaurantRepository.create).toHaveBeenCalledTimes(1);
             expect(restaurantRepository.create).toHaveBeenCalledWith(createRestaurantInput);
             expect(categoryRepository.getOrCreate).toHaveBeenCalledWith(
@@ -127,10 +123,36 @@ describe('RestaurantService', () => {
             expect(result).toEqual({ ok: true, restaurantId: undefined });
         });
 
+        it('should fail on exception', async () => {
+            restaurantRepository.create.mockImplementation(() => { throw new Error(); }); // correct way to simulate an error occurring during the function execution
+            restaurantRepository.save.mockImplementation(() => { throw new Error(); }); // correct way to simulate an error occurring during the function execution
 
+            const result = await service.createRestaurant(user, createRestaurantInput);
 
+            expect(result).toEqual({ ok: false, error: '식당을 만들 수 없습니다.' });
+        });
 
     });
+
+    describe('myRestaurants', () => {
+     
+       
+    });
+
+    it.todo('myRestaurant');
+    it.todo('editRestaurant');
+    it.todo('deleteRestaurant');
+    it.todo('allRestaurants');
+    it.todo('findRestaurantById');
+    it.todo('searchRestaurantByName');
+    it.todo('allCategories');
+    it.todo('findCategoryBySlug');
+    it.todo('createDish');
+    it.todo('editDish');
+    it.todo('deleteDish');
+    it.todo('createReview');
+    it.todo('editReview');
+    it.todo('deleteReview');
 });
 
 
