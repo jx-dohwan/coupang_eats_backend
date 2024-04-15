@@ -8,6 +8,7 @@ import { Reviews } from "./entities/reviews.entity";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { CategoryRepository } from "./repositories/category.repository";
 import { User, UserRole } from "src/users/entities/user.entity";
+import { MyRestaurantInput } from "./dtos/my-restaurant.dto";
 
 
 const mockRepository = () => ({
@@ -190,7 +191,68 @@ describe('RestaurantService', () => {
         });
     });
 
-    it.todo('myRestaurant');
+    describe('myRestaurant', () => {
+        let myRestaurantInput: MyRestaurantInput;
+    
+        beforeEach(() => {
+            myRestaurantInput = { id: 1 }; 
+        });
+    
+        it('should return empty if no My Restaurant exist', async () => {
+            restaurantRepository.findOne.mockResolvedValue(null); 
+    
+            const result = await service.myRestaurant(user, myRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({
+                where: { owner: { id: user.id }, id: myRestaurantInput.id },
+                relations: ['menu', 'orders'],
+            });
+            expect(result).toEqual({
+                ok: true,
+                restaurant: null
+            });
+        });
+    
+        it('should find My Restaurant', async () => {
+            const restaurantResult = {
+                id: 1,
+      
+            };
+            restaurantRepository.findOne.mockResolvedValue(restaurantResult);
+    
+            const result = await service.myRestaurant(user, myRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({
+                where: { owner: { id: user.id }, id: myRestaurantInput.id },
+                relations: ['menu', 'orders'],
+            });
+            expect(result).toEqual({
+                ok: true,
+                restaurant: restaurantResult
+            });
+        });
+    
+        it('should fail on exception', async () => {
+            const errorMessage = "Database error";
+            restaurantRepository.findOne.mockRejectedValue(new Error(errorMessage));
+    
+            const result = await service.myRestaurant(user, myRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({
+                where: { owner: { id: user.id }, id: myRestaurantInput.id },
+                relations: ['menu', 'orders'],
+            });
+            expect(result).toEqual({
+                ok: false,
+                error: "식당을 찾을 수 없습니다."
+            });
+        });
+    });
+    
+
     it.todo('editRestaurant');
     it.todo('deleteRestaurant');
     it.todo('allRestaurants');
