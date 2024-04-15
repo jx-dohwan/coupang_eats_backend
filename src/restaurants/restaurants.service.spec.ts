@@ -20,17 +20,19 @@ const mockRepository = () => ({
 });
 
 const mockCategoryRepository = () => ({
-    ...mockRepository(),
     getOrCreate: jest.fn(),
 });
 
-type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>>;
+type MockRepository<T = any> = Partial<Record<keyof Repository<T>, jest.Mock>> & {
+    getOrCreate: jest.Mock;
+};
 
 
 describe('RestaurantService', () => {
     let service: RestaurantService;
     let restaurantRepository: MockRepository<Restaurant>;
-    let categoryRepository: MockRepository<Category>;
+    // let categoryRepository: MockRepository<Category>;
+    let categoryRepository: CategoryRepository
     let dishRepository: MockRepository<Dish>;
     let reviewRepository: MockRepository<Reviews>;
     let user: User;
@@ -101,33 +103,33 @@ describe('RestaurantService', () => {
                 ok: false,
                 error: '식당을 만들 수 없습니다.'
             });
-      
+
         });
 
-        // it('should succeed if restaurant does not exist', async () => {
-        //     restaurantRepository.findOne.mockResolvedValue(undefined);
-        //     restaurantRepository.save.mockResolvedValue({
-        //         id: 1,
-        //         name: createRestaurantInput.name,
-        //         owner: user,
-        //         category: { id: 1, name: createRestaurantInput.categoryName }
-        //     });
 
-        //     const result = await service.createRestaurant(user, createRestaurantInput);
+        it('should create a new restaurant', async () => {
+            // restaurantRepository.findOne.mockResolvedValue(undefined);
+            restaurantRepository.create.mockReturnValue(createRestaurantInput);
+            // categoryRepository.getOrCreate.mockResolvedValue(expect.any(String));
+            restaurantRepository.save.mockResolvedValue(createRestaurantInput);
 
-        //     expect(result).toEqual({
-        //         ok: true,
-        //         restaurantId: 1
-        //     });
-        //     expect(restaurantRepository.save).toHaveBeenCalledWith({
-        //         name: createRestaurantInput.name,
-        //         coverImg: createRestaurantInput.coverImg,
-        //         address: createRestaurantInput.address,
-        //         owner: user,
-        //         category: expect.any(Object) // Since category is mocked to always return { id: 1, name }
-        //     });
-        //     // expect(categoryRepository.getOrCreate).toHaveBeenCalledWith(createRestaurantInput.categoryName);
-        // });
+            const result = await service.createRestaurant(user, createRestaurantInput);
+
+            // expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            // expect(restaurantRepository.findOne).toHaveBeenCalledWith(result);
+            expect(restaurantRepository.create).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.create).toHaveBeenCalledWith(createRestaurantInput);
+            expect(categoryRepository.getOrCreate).toHaveBeenCalledWith(
+                expect.any(String),
+            )
+
+            expect(restaurantRepository.save).toHaveBeenCalled();
+            expect(result).toEqual({ ok: true, restaurantId: undefined });
+        });
+
+
+
+
     });
 });
 
