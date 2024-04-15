@@ -68,6 +68,7 @@ describe('RestaurantService', () => {
         dishRepository = module.get(getRepositoryToken(Dish));
         reviewRepository = module.get(getRepositoryToken(Reviews));
         user = new User();
+        // 아래로는 아직 까지는 사용하지 않고 있음
         user.id = 1;
         user.email = 'test1@test.com';
         user.password = '12345';
@@ -254,8 +255,10 @@ describe('RestaurantService', () => {
     });
 
     describe('editRestaurant', () => {
-        let editRestaurantInput: EditRestaurantInput;
-        let restaurant: Restaurant;
+        let editRestaurantInput;
+        let mockRestaurant;
+        let user;
+        let category;
 
         beforeEach(() => {
             editRestaurantInput = {
@@ -266,7 +269,29 @@ describe('RestaurantService', () => {
                 categoryName: 'Updated Category'
             };
 
+            mockRestaurant = {
+                id: 1,
+                name: 'Original Name',
+                address: 'Original Address',
+                coverImg: 'http://example.com/original_img.png',
+                category: {
+                    id: 2,
+                    name: 'Original Category'
+                },
+                ownerId: 9,
+                isPromoted: false,
+                promotedUntil: null,
+                createdAt: new Date('2020-01-01'),
+                updatedAt: new Date('2020-01-01')
+            };
+            user = {
+                id: 9  // user 객체에 id 속성 부여
+            };
 
+            category = {
+                id: 3,
+                name: 'Updated Category'
+            };
         });
 
 
@@ -286,7 +311,7 @@ describe('RestaurantService', () => {
         });
 
         it('should fail if not the owner', async () => {
-            restaurantRepository.findOne.mockResolvedValue(new Error());
+            restaurantRepository.findOne.mockResolvedValue({ ...mockRestaurant, ownerId: user.id + 1 });
 
             const result = await service.editRestaurant(user, editRestaurantInput);
 
@@ -303,10 +328,9 @@ describe('RestaurantService', () => {
         it('should fail on exception', async () => {
             restaurantRepository.findOne.mockImplementation(() => {
                 throw new Error('Unexpected error');
-            });  // Force an exception to be thrown when `findOne` is called
-        
+            });
             const result = await service.editRestaurant(user, editRestaurantInput);
-        
+
             expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
             expect(restaurantRepository.findOne).toHaveBeenCalledWith({
                 where: { id: editRestaurantInput.restaurantId }
@@ -316,21 +340,87 @@ describe('RestaurantService', () => {
                 error: '식당을 수정할 수 없습니다.'
             });
         });
-        
 
-        it('should change name', async () => {
 
-        })
-        it('should change address', async () => {
 
-        })
-        it('should change coverImg', async () => {
 
-        })
-    
     });
 
-    it.todo('deleteRestaurant');
+    describe('deleteRestaurant', () => {
+        let mockRestaurant;
+        let owner;
+        let wrongOwner;
+        let deleteRestaurantInput;
+    
+        beforeEach(() => {
+            mockRestaurant = {
+                id: 1,
+                name: 'Sample Restaurant',
+                ownerId: 9,
+            };
+    
+            owner = {
+                id: 9,
+            };
+    
+            wrongOwner = {
+                id: 10,
+            };
+    
+            deleteRestaurantInput = {
+                restaurantId: 1,
+            };
+    
+            restaurantRepository.findOne = jest.fn().mockResolvedValue(mockRestaurant);
+            restaurantRepository.delete = jest.fn().mockResolvedValue({ affected: 1 });
+        });
+    
+        it('should fail if restaurant does not exist', async () => {
+            restaurantRepository.findOne.mockResolvedValue(null);  // Simulate not finding the restaurant
+    
+            const result = await service.deleteRestaurant(owner, deleteRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({ where: { id: deleteRestaurantInput.restaurantId } });
+            expect(result).toEqual({
+                ok: false,
+                error: '식당을 찾을 수 없습니다.'
+            });
+        });
+    
+        it('should fail if user is not the owner', async () => {
+            const result = await service.deleteRestaurant(wrongOwner, deleteRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({ where: { id: deleteRestaurantInput.restaurantId } });
+            expect(result).toEqual({
+                ok: false,
+                error: "나의 식당이 아니면 삭제할 수 없습니다."
+            });
+        });
+    
+        it('should successfully delete the restaurant if user is the owner', async () => {
+            const result = await service.deleteRestaurant(owner, deleteRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({ where: { id: deleteRestaurantInput.restaurantId } });
+            expect(restaurantRepository.delete).toHaveBeenCalledWith(deleteRestaurantInput.restaurantId);
+            expect(result).toEqual({
+                ok: true,
+            });
+        });
+    
+        it('should handle errors during the deletion process', async () => {
+            restaurantRepository.delete.mockRejectedValue(new Error("Deletion failed")); // Simulate deletion error
+    
+            const result = await service.deleteRestaurant(owner, deleteRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({ where: { id: deleteRestaurantInput.restaurantId } });
+            expect(result).toEqual({
+                ok: false,
+                error: "식당을 삭제할 수 없습니다."
+            });
+        });
+    });
+    
+ 
     it.todo('allRestaurants');
     it.todo('findRestaurantById');
     it.todo('searchRestaurantByName');
