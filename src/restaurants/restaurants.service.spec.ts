@@ -9,6 +9,7 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { CategoryRepository } from "./repositories/category.repository";
 import { User, UserRole } from "src/users/entities/user.entity";
 import { MyRestaurantInput } from "./dtos/my-restaurant.dto";
+import { EditRestaurantInput } from "./dtos/edit-restaurant.dto";
 
 
 const mockRepository = () => ({
@@ -173,7 +174,7 @@ describe('RestaurantService', () => {
                 restaurants: restaurantResult
             });
         });
-        
+
         it('should fail on exception', async () => {
             const errorMessage = "Database error";
             restaurantRepository.find.mockRejectedValue(new Error(errorMessage));
@@ -193,16 +194,16 @@ describe('RestaurantService', () => {
 
     describe('myRestaurant', () => {
         let myRestaurantInput: MyRestaurantInput;
-    
+
         beforeEach(() => {
-            myRestaurantInput = { id: 1 }; 
+            myRestaurantInput = { id: 1 };
         });
-    
+
         it('should return empty if no My Restaurant exist', async () => {
-            restaurantRepository.findOne.mockResolvedValue(null); 
-    
+            restaurantRepository.findOne.mockResolvedValue(null);
+
             const result = await service.myRestaurant(user, myRestaurantInput);
-    
+
             expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
             expect(restaurantRepository.findOne).toHaveBeenCalledWith({
                 where: { owner: { id: user.id }, id: myRestaurantInput.id },
@@ -213,16 +214,16 @@ describe('RestaurantService', () => {
                 restaurant: null
             });
         });
-    
+
         it('should find My Restaurant', async () => {
             const restaurantResult = {
                 id: 1,
-      
+
             };
             restaurantRepository.findOne.mockResolvedValue(restaurantResult);
-    
+
             const result = await service.myRestaurant(user, myRestaurantInput);
-    
+
             expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
             expect(restaurantRepository.findOne).toHaveBeenCalledWith({
                 where: { owner: { id: user.id }, id: myRestaurantInput.id },
@@ -233,13 +234,13 @@ describe('RestaurantService', () => {
                 restaurant: restaurantResult
             });
         });
-    
+
         it('should fail on exception', async () => {
             const errorMessage = "Database error";
             restaurantRepository.findOne.mockRejectedValue(new Error(errorMessage));
-    
+
             const result = await service.myRestaurant(user, myRestaurantInput);
-    
+
             expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
             expect(restaurantRepository.findOne).toHaveBeenCalledWith({
                 where: { owner: { id: user.id }, id: myRestaurantInput.id },
@@ -251,9 +252,54 @@ describe('RestaurantService', () => {
             });
         });
     });
-    
 
-    it.todo('editRestaurant');
+    describe('editRestaurant', () => {
+        let editRestaurantInput: EditRestaurantInput;
+        let restaurant: Restaurant;
+    
+        beforeEach(() => {
+            editRestaurantInput = {
+                restaurantId: 1,
+                name: 'Updated Name',
+                address: 'Updated Address',
+                coverImg: 'http://example.com/updated_img.png',
+                categoryName: 'Updated Category'
+            };
+    
+     
+        });
+        it('should fail if restaurant does not exist', async () => {
+            restaurantRepository.findOne.mockResolvedValue(null);  // Simulate not finding the restaurant
+
+            const result = await service.editRestaurant(user, editRestaurantInput);
+    
+            expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({
+                where: { id: editRestaurantInput.restaurantId }
+            });
+            expect(result).toEqual({
+                ok: false,
+                error: '식당을 찾을 수 없습니다.'
+            });
+        });
+    
+        it('should fail if not the owner', async () => {
+    
+        });
+        it('should change name', async () => {
+        
+        })
+        it('should change address', async () => {
+        
+        })
+        it('should change coverImg', async () => {
+        
+        })
+        it('should change coverImg', async () => {
+        
+        })
+    });
+
     it.todo('deleteRestaurant');
     it.todo('allRestaurants');
     it.todo('findRestaurantById');
