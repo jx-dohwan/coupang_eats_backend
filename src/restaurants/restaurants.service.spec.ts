@@ -135,8 +135,59 @@ describe('RestaurantService', () => {
     });
 
     describe('myRestaurants', () => {
-     
-       
+        it('should return empty if no My Restaurants exist', async () => {
+            restaurantRepository.find.mockResolvedValue([]);
+
+            const result = await service.myRestaurants(user);
+
+            expect(restaurantRepository.find).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.find).toHaveBeenCalledWith({
+                where: { owner: { id: user.id } }
+            });
+            expect(result).toEqual({
+                ok: true,
+                restaurants: []
+            });
+        });
+
+        it('should find all My Restaurants', async () => {
+            const restaurantResult = [
+                {
+                    id: 1,
+                },
+                {
+                    id: 2,
+                }
+            ];
+            restaurantRepository.find.mockResolvedValue(restaurantResult);
+
+            const result = await service.myRestaurants(user);
+
+            expect(restaurantRepository.find).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.find).toHaveBeenCalledWith({
+                where: { owner: { id: user.id } }
+            });
+            expect(result).toEqual({
+                ok: true,
+                restaurants: restaurantResult
+            });
+        });
+        
+        it('should fail on exception', async () => {
+            const errorMessage = "Database error";
+            restaurantRepository.find.mockRejectedValue(new Error(errorMessage));
+
+            const result = await service.myRestaurants(user);
+
+            expect(restaurantRepository.find).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.find).toHaveBeenCalledWith({
+                where: { owner: { id: user.id } }
+            });
+            expect(result).toEqual({
+                ok: false,
+                error: "식당을 찾을 수 없습니다."
+            });
+        });
     });
 
     it.todo('myRestaurant');
