@@ -268,6 +268,8 @@ describe('RestaurantService', () => {
 
 
         });
+
+
         it('should fail if restaurant does not exist', async () => {
             restaurantRepository.findOne.mockResolvedValue(null);  // Simulate not finding the restaurant
 
@@ -289,12 +291,33 @@ describe('RestaurantService', () => {
             const result = await service.editRestaurant(user, editRestaurantInput);
 
             expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({
+                where: { id: editRestaurantInput.restaurantId }
+            });
             expect(result).toEqual({
                 ok: false,
                 error: "나의 식당이 아니면 수정할 수 없습니다."
             });
         });
+
+        it('should fail on exception', async () => {
+            restaurantRepository.findOne.mockImplementation(() => {
+                throw new Error('Unexpected error');
+            });  // Force an exception to be thrown when `findOne` is called
         
+            const result = await service.editRestaurant(user, editRestaurantInput);
+        
+            expect(restaurantRepository.findOne).toHaveBeenCalledTimes(1);
+            expect(restaurantRepository.findOne).toHaveBeenCalledWith({
+                where: { id: editRestaurantInput.restaurantId }
+            });
+            expect(result).toEqual({
+                ok: false,
+                error: '식당을 수정할 수 없습니다.'
+            });
+        });
+        
+
         it('should change name', async () => {
 
         })
@@ -304,9 +327,7 @@ describe('RestaurantService', () => {
         it('should change coverImg', async () => {
 
         })
-        it('should change coverImg', async () => {
-
-        })
+    
     });
 
     it.todo('deleteRestaurant');
