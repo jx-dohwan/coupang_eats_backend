@@ -68,6 +68,7 @@ import { ReviewImges, Reviews } from './restaurants/entities/reviews.entity';
         Payment
       ], // TypeORM이 사용할 엔티티 모델 배
     }),
+
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver, // 사용할 GraphQL 서버 드라이버를 ApolloDriver로 설정한다.
       autoSchemaFile: true, // 스키마 파일을 자동으로 생성하도록 설정한다.
