@@ -31,6 +31,7 @@ export class Order extends CoreEntity {
     customer?: User;  // customer 필드는 Order 엔티티와 관련된 User 엔티티를 참조합니다. 선택적 필드 (null 가능).
 
     @RelationId((order: Order) => order.customer)  // RelationId 데코레이터: Order 엔티티의 customer 필드에 저장된 User의 ID를 customerId 필드에 자동으로 저장합니다.
+    @Field(type => Number)
     customerId: number;  // customerId 필드: 이는 customer 필드에서 참조하는 User 엔티티의 ID 값을 저장합니다.
 
     @Field(type => User, { nullable: true })  // GraphQL 스키마에서의 필드 정의, User 타입, null 허용 (주문과 연관된 운전자).

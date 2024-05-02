@@ -23,6 +23,7 @@ import { Reviews } from './entities/reviews.entity';
 import { CreateReviewInput, CreateReviewOutput } from './dtos/create-review.dto';
 import { EditReviewInput, EditReviewOutput } from './dtos/edit-review.dto';
 import { DeleteReviewInput, DeleteReviewOutput } from './dtos/delete-review.dto';
+import { MenuInput, MenuOutput } from './dtos/menu.dto';
 
 
 @Injectable()
@@ -226,6 +227,7 @@ export class RestaurantService {
         }
     }
 
+
     async searchRestaurantByName({
         query,
         page,
@@ -234,6 +236,7 @@ export class RestaurantService {
             const [restaurants, totalResults] = await this.restaurants.findAndCount({
                 where: {
                     name: Raw(name => `${name} ILIKE '%${query}%'`),
+
                 },
                 skip: (page - 1) * 20,
                 take: 20
@@ -430,6 +433,34 @@ export class RestaurantService {
         }
     }
 
+    async findMenuById({
+        menuId,
+    }: MenuInput): Promise<MenuOutput> {
+        try {
+            const menu = await this.dishes.findOne({
+                where: { id: menuId },
+                relations:['restaurantId']
+            });
+
+            if (!menu) {
+                return {
+                    ok: false,
+                    error: '해당 메뉴를 찾을 수 없습니다.'
+                };
+            }
+
+            return {
+                ok: true,
+                menu,
+            };
+
+        } catch {
+            return {
+                ok: false,
+                error: '메뉴를 찾을 수 없습니다.'
+            }
+        }
+    }
 
     // Reviews
     async createReview(

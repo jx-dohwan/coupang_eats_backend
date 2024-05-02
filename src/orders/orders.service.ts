@@ -82,6 +82,7 @@ export class OrderService {
                 const orderItem = await this.orderItems.save(
                     this.orderItems.create({
                         dish,
+                        dishName: dish.name,
                         options: item.options, // 주문 옵션 포함
                     }),
                 );
@@ -386,4 +387,5 @@ export class OrderService {
             }
         }
     }
+
 }

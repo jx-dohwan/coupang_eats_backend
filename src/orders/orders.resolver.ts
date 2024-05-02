@@ -57,6 +57,7 @@ export class OrderResolver {
         return this.ordersService.editOrder(user, editOrderInput);
     }
 
+
     // Subscription
     @Subscription(returns => Order, { // 반환 타입으로 Order를 명시하여, 이 구독이 Order 객체를 반환할 것임을 나타냄
         filter: ({ pendingOrders: { ownerId } }, _, { user }) => { // filter 함수를 정의하여, 발행된 이벤트 중 구독자에게 전송할 이벤트를 필터링 한다.
@@ -94,7 +95,7 @@ export class OrderResolver {
             return order.id === input.id; // 추가적으로, input으로 전달된 주문 ID와 이벤트 데이터의 주문 ID가 일치하는 경우에만 true를 반환
         },
     })
-    
+
     @Role(['Any']) // 'Any' 역할을 가진 사용자가 접근 가능하도록 설정
     orderUpdates(@Args('input') orderUpdatesInput: OrderUpdatesInput) {
         return this.pubSub.asyncIterator(NEW_ORDER_UPDATE); // NEW_ORDER_UPDATE 이벤트를 기반으로 비동기 이터레이터를 생성하여 반환합니다.
@@ -105,7 +106,7 @@ export class OrderResolver {
     takeOrder(
         @AuthUser() driver: User, // 현재 인증된 사용자(배달기사)를 AuthUser 데코레이터를 통해 가져옴 
         @Args('input') takeOrderInput: TakeOrderInput, // 클라이언트에서 제공한 입력 값을 가져옴
-    ): Promise<TakeOrderOutput> { 
+    ): Promise<TakeOrderOutput> {
         return this.ordersService.takeOrder(driver, takeOrderInput);  // ordersService의 takeOrder 함수를 호출하여 주문을 수락하고 결과를 반환
     }
 }
