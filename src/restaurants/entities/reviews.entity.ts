@@ -1,9 +1,10 @@
 import { Field, InputType, Int, ObjectType } from "@nestjs/graphql";
-import { IsNumber, IsString, Length } from "class-validator";
+import { IsNumber, IsString, Length, Max, Min, ValidateNested } from "class-validator";
 import { CoreEntity } from "src/common/entities/core.entity";
 import { Column, Entity, ManyToOne, RelationId } from "typeorm";
 import { Restaurant } from "./restaurant.entity";
 import { User } from "src/users/entities/user.entity";
+import { Type } from "class-transformer";
 
 @InputType('reviewImgInputType', {isAbstract:true})
 @ObjectType()
@@ -21,7 +22,8 @@ export class Reviews extends CoreEntity {
     @Field(type => Int)
     @Column()
     @IsNumber()
-    @Length(1, 5)
+    @Min(1) // 숫자는 이걸로 길이를 제한한다.
+    @Max(5)
     score?: number;
 
     @Field(type => String, { nullable: true })
@@ -32,7 +34,8 @@ export class Reviews extends CoreEntity {
 
     @Field(type => [ReviewImges], { nullable: true })
     @Column({type: 'json',  nullable: true })
-    @IsString()
+    @ValidateNested({ each: true }) // 이건뭐지?
+    @Type(() => ReviewImges) // 이건 뭐지?
     reviewImg?: ReviewImges[];
 
     @Field(type => [Restaurant])
