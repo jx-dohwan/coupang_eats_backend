@@ -52,6 +52,16 @@ export class Dish extends CoreEntity {
     @Length(1, 140)
     description: string;
 
+    @Field(type => Int, { nullable: true })
+    @Column({ nullable: true })
+    @IsNumber()
+    deliveryFee: number;
+
+    @Field(type => Int, { nullable: true })
+    @Column({ nullable: true })
+    @IsNumber()
+    minimumPrice: number;
+
     @Field(type => Restaurant)
     @ManyToOne(
         type => Restaurant,              

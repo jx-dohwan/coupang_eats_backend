@@ -8,6 +8,9 @@ export class CreateDishInput extends PickType(Dish, [
     'price',
     'description',
     'options',
+    'photo',
+    'deliveryFee',
+    'minimumPrice',
     // PickType을 사용하여 Dish 엔티티에서 'name', 'price', 'description', 'options' 필드를 상속받아 입력 타입으로 사용
     // 이는 GraphQL에서 해당 요리를 생성할 때 필요한 필드들만 선택적으로 사용하기 위함
 ]) {
