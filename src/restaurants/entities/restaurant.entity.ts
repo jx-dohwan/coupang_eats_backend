@@ -1,5 +1,5 @@
-import { Field, InputType, ObjectType } from '@nestjs/graphql';
-import { IsString, Length } from 'class-validator';
+import { Field, InputType, Int, ObjectType } from '@nestjs/graphql';
+import { IsNumber, IsString, Length } from 'class-validator';
 import { CoreEntity } from 'src/common/entities/core.entity';
 import { User } from 'src/users/entities/user.entity';
 import { Column, Entity, ManyToOne, OneToMany, RelationId } from 'typeorm';
@@ -47,6 +47,15 @@ export class Restaurant extends CoreEntity {
     @RelationId((restaurant: Restaurant) => restaurant.owner)
     ownerId: number;
 
+    @Field(type => Int)
+    @Column()
+    @IsNumber()
+    deliveryFee: number;
+
+    @Field(type => Int)
+    @Column()
+    @IsNumber()
+    minimumPrice: number;
 
     @Field(type => Boolean)
     @Column({ default: false })
@@ -78,4 +87,4 @@ export class Restaurant extends CoreEntity {
     )
     reviews?:Reviews[];
 
-}
+} 

@@ -12,6 +12,8 @@ export class EditDishInput extends PickType(
         'options',      // 'options' 필드를 포함합니다.
         'price',        // 'price' 필드를 포함합니다.
         'description',  // 'description' 필드를 포함합니다.
+        'photo',
+
     ]  // PickType은 주어진 배열의 필드만을 포함하는 새 타입을 만듭니다.
 ) {
     @Field(type => Int)  // dishId 필드는 GraphQL 스키마에서 Int 타입으로 정의됩니다.

@@ -42,8 +42,8 @@ export class Dish extends CoreEntity {
     @IsNumber()
     price: number;
 
-    @Field(type => String, { nullable: true })
-    @Column({ nullable: true })
+    @Field(type => String, )
+    @Column()
     @IsString()
     photo: string;
 
@@ -51,16 +51,6 @@ export class Dish extends CoreEntity {
     @Column()
     @Length(1, 140)
     description: string;
-
-    @Field(type => Int, { nullable: true })
-    @Column({ nullable: true })
-    @IsNumber()
-    deliveryFee: number;
-
-    @Field(type => Int, { nullable: true })
-    @Column({ nullable: true })
-    @IsNumber()
-    minimumPrice: number;
 
     @Field(type => Restaurant)
     @ManyToOne(
