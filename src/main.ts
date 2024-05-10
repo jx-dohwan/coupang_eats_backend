@@ -7,10 +7,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
 
-  const PORT = process.env.PORT || 4000; // 환경 변수를 사용하여 포트 지정
-  await app.listen(PORT);
+  // Render에서 자동으로 제공되는 PORT 환경 변수 사용
+  const PORT = process.env.PORT || 4000; // 포트 번호를 환경 변수로부터 가져오거나 기본값 4000 사용
+  await app.listen(PORT, "0.0.0.0"); // 0.0.0.0을 사용하여 모든 네트워크 인터페이스에서 요청 수신
   console.log(`Server is running on port ${PORT}`);
 }
+
 bootstrap();
 
 /*async function bootstrap() {
