@@ -90,7 +90,9 @@ describe('RestaurantService', () => {
             name: '이름모를식당',
             address: '버뮤다삼각지대',
             coverImg: '',
-            categoryName: '소속없음'
+            categoryName: '소속없음',
+            deliveryFee:3000,
+            minimumPrice:10000
         };
 
         it('should fail if restaurant exists', async () => {
