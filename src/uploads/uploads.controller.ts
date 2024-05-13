@@ -13,7 +13,12 @@ const BUCKET_NAME = 'jgimagebucketox';
 @Controller('uploads')
 export class UploadsController {
     @Post('')
-    @UseInterceptors(FileInterceptor('file'))
+    @UseInterceptors(FileInterceptor('file', {
+        fileFilter: (req, file, cb) => {
+            file.originalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+            cb(null, true);
+        },
+    }))
     async uploadFile(@UploadedFile() file) {
         AWS.config.update({
             credentials: {
