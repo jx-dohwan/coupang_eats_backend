@@ -1,4 +1,4 @@
-import { Field, Float, InputType, ObjectType, registerEnumType } from "@nestjs/graphql";
+import { Field, Float, InputType, Int, ObjectType, registerEnumType } from "@nestjs/graphql";
 import { CoreEntity } from "src/common/entities/core.entity";
 import { Restaurant } from "src/restaurants/entities/restaurant.entity";
 import { User } from "src/users/entities/user.entity";
@@ -66,6 +66,11 @@ export class Order extends CoreEntity {
     @Field(type => Float, { nullable: true })  // GraphQL 필드, Float 타입, null 허용
     @IsNumber()  // class-validator: 이 필드는 숫자여야 함을 검증
     total?: number;  // total 필드는 주문의 총액을 나타냅니다. 선택적 필드 (null 가능).
+
+    @Column({ nullable: true })  
+    @Field(type => Int, { nullable: true })  
+    @IsNumber()  
+    totalCount?: number;  
 
     @Column({ type: 'enum', enum: OrderStatus, default: OrderStatus.Pending })  // enum 타입 컬럼, 기본값은 OrderStatus.Pending
     @Field(type => OrderStatus)  // GraphQL 필드, OrderStatus enum 타입

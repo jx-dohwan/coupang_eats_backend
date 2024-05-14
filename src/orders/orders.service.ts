@@ -27,7 +27,7 @@ export class OrderService {
 
     async createOrder(
         customer: User,
-        { restaurantId, items }: CreateOrderInput,
+        { restaurantId, items, totalCount }: CreateOrderInput,
     ): Promise<CreateOrderOutput> {
         try {
             // 식당 정보를 검색
@@ -39,7 +39,9 @@ export class OrderService {
                     error: '식당을 찾을 수 없습니다.',
                 };
             }
-            let orderFinalPrice = 0; // 주문의 최종 가격 초기화
+
+            console.log("---------------------restaurant---------------------", restaurant)
+            let orderFinalPrice = restaurant.deliveryFee; // 주문의 최종 가격 초기화
             const orderItems: OrderItem[] = []; // 주문에 포함될 주문 항목들을 저장할 배열 초기화
 
             // 주문 항목 처리
@@ -53,7 +55,7 @@ export class OrderService {
                     };
                 }
 
-                let dishFinalPrice = dish.price; // 음식의 기본 가격으로 시작(음식 가격 초기화)
+                let dishFinalPrice = dish.price*totalCount; // 음식의 기본 가격으로 시작(음식 가격 초기화)
 
                 // 음식 가격 계산 : 주문 항목의 각 옵션에 대해 추가 가격을 계산 
                 for (const itemOption of item.options) {
@@ -62,7 +64,7 @@ export class OrderService {
                     );
                     if (dishOption) {
                         if (dishOption.extra) { // 추가가 있는 경우
-                            dishFinalPrice = dishFinalPrice + dishOption.extra;
+                            dishFinalPrice = dishFinalPrice + dishOption.extra; 
                         } else { // 추가가 아닌 선택인 경우
                             const dishOptionChoice = dishOption.choices.find(
                                 optionChoice => optionChoice.name === itemOption.choice,
@@ -94,6 +96,7 @@ export class OrderService {
                 this.orders.create({
                     customer,
                     restaurant,
+                    totalCount:totalCount,
                     total: orderFinalPrice, // 최종금액
                     items: orderItems, // 주문 항목 
                 }),

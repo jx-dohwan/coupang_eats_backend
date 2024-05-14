@@ -16,6 +16,9 @@ export class CreateOrderInput {
     @Field(type => Int)  // GraphQL 필드 정의, Integer 타입
     restaurantId: number; // 주문이 이루어질 식당의 ID
 
+    @Field(type => Int)
+    totalCount: number;
+
     @Field(type => [CreateOrderItemInput])  // CreateOrderItemInput 배열 타입 필드
     items: CreateOrderItemInput[];  // 주문 항목들의 배열
 }
