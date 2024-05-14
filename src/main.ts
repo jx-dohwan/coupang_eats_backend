@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 // 배포용
-/*
+
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
@@ -16,7 +16,7 @@ async function bootstrap() {
 }
 
 bootstrap();
-*/
+/*
 // 로컬용
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -30,3 +30,4 @@ async function bootstrap() {
   await app.listen(4000);
 }
 bootstrap();
+*/
