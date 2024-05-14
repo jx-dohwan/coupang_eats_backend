@@ -6,8 +6,6 @@
 3️⃣ 설명 : TypeScript, Nest.js, GraphQL, TypeORM을을 활용하여 프로젝트 진행
 ```
 
-<img src="img/result_v1.png"/>
-
 ### 해당 프로젝트에 관한 자세한 설명은 블로그에 정리<br>
 - [쿠팡이츠 클론코딩 프론트엔드](https://velog.io/@jx7789/series/%EC%BF%A0%ED%8C%A1%EC%9D%B4%EC%B8%A0-%ED%81%B4%EB%A1%A0%EC%BD%94%EB%94%A9ft.%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C)]<br>
 - [쿠팡이츠 클론코딩 백엔드](https://velog.io/@jx7789/series/%EC%BF%A0%ED%8C%A1%EC%9D%B4%EC%B8%A0-%ED%81%B4%EB%A1%A0%EC%BD%94%EB%94%A9-%EB%B0%B1%EC%97%94%EB%93%9C)<br>
